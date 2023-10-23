@@ -1,5 +1,6 @@
 import pygame
 import time
+import tasks
 
 
 def main():
@@ -15,6 +16,8 @@ def main():
 
     last_frame_time = time.perf_counter()
 
+    test_task = tasks.ElectricalBoardTask()
+
     done = False
     while not done:
 
@@ -24,13 +27,18 @@ def main():
         keys = pygame.key.get_pressed()
 
         mouse_input = pygame.mouse.get_pressed()
-        mouse_pos = pygame.mouse.get_pos()
+        mouse_pos = pygame.Vector2(pygame.mouse.get_pos())
+        mouse_pos /= ZOOM
+
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 done = True
 
         display.fill((255, 255, 255))
+
+        # draw here
+        test_task.play(dt, display, mouse_pos, mouse_input)
 
         surf = pygame.transform.scale(display, WS)
         window.blit(surf, [0, 0])
