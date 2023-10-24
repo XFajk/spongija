@@ -15,9 +15,13 @@ def main():
     display = pygame.Surface((WS[0] / ZOOM, WS[1] / ZOOM))
 
     clock = pygame.time.Clock()
-    
-    inter = utils.interactable.Interactable((50, 50), (30, 30))
-    
+
+    tool_bar = utils.ToolBar((display.get_width()-28, display.get_height()-28))
+    tool_bar.tools.append(utils.Tool(
+        pygame.image.load("Assets/sprites/screw_driver_icon.png").convert_alpha(),
+        "screw_driver", utils.Interactable((0, 0), (18, 18))
+    ))
+        
     last_frame_time = time.perf_counter()
     
     done = False
@@ -37,10 +41,11 @@ def main():
             if event.type == pygame.QUIT:
                 done = True
 
-        display.fill((255, 255, 255))
+        display.fill((90, 90, 90))
 
         # draw here
-        inter.update(mouse_pos, mouse_input[0])
+        tool_bar.update(dt, mouse_pos, mouse_input[0])
+        tool_bar.draw(dt, display)
             
         surf = pygame.transform.scale(display, WS)
         window.blit(surf, [0, 0])
