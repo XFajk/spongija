@@ -1,7 +1,9 @@
 import pygame
-import time
-import tasks
+from icecream import ic
 
+import time
+
+import utils
 
 def main():
     pygame.init()
@@ -13,11 +15,11 @@ def main():
     display = pygame.Surface((WS[0] / ZOOM, WS[1] / ZOOM))
 
     clock = pygame.time.Clock()
-
+    
+    inter = utils.interactable.Interactable((50, 50), (30, 30))
+    
     last_frame_time = time.perf_counter()
-
-    test_task = tasks.ElectricalBoardTask()
-
+    
     done = False
     while not done:
 
@@ -38,8 +40,8 @@ def main():
         display.fill((255, 255, 255))
 
         # draw here
-        test_task.play(dt, display, mouse_pos, mouse_input)
-
+        inter.update(mouse_pos, mouse_input[0])
+            
         surf = pygame.transform.scale(display, WS)
         window.blit(surf, [0, 0])
         pygame.display.update()
