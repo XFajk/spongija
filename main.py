@@ -5,6 +5,7 @@ import time
 
 import utils
 
+
 def main():
     pygame.init()
 
@@ -16,24 +17,24 @@ def main():
 
     clock = pygame.time.Clock()
 
-    tool_bar = utils.ToolBar((display.get_width()-28, display.get_height()-28))
-    
-    scenes = [utils.scenes.CableScene(tool_bar, display),]
- 
+    tool_bar = utils.ToolBar((display.get_width() - 28, display.get_height() - 28))
+
+    scenes = [utils.scenes.CableScene(tool_bar, display), ]
+
     last_frame_time = time.perf_counter()
-    
+
     done = False
     while not done:
 
         current_frame_time = time.perf_counter()
         dt = (current_frame_time - last_frame_time) * 60
+        last_frame_time = current_frame_time
 
         keys = pygame.key.get_pressed()
 
         mouse_input = pygame.mouse.get_pressed()
         mouse_pos = pygame.Vector2(pygame.mouse.get_pos())
         mouse_pos /= ZOOM
-
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -43,10 +44,10 @@ def main():
 
         # draw here
         scenes[0].play(dt, tool_bar, display, mouse_pos, mouse_input[0])
-        
+
         tool_bar.update(dt, mouse_pos, mouse_input[0])
         tool_bar.draw(dt, display)
-            
+
         surf = pygame.transform.scale(display, WS)
         window.blit(surf, [0, 0])
         pygame.display.update()
