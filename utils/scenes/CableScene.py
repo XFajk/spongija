@@ -6,15 +6,16 @@ from dataclasses import dataclass
 
 class CableScene:
     def __init__(self, tool_bar: ToolBar, display: pygame.Surface):
-        tool_bar.tools = []
-        tool_bar.tools.append(Tool(
-            pygame.image.load("Assets/sprites/filler_image.png").convert_alpha(),
-            "grab", Interactable((0, 0), (16, 16))
-        ))
-        tool_bar.tools.append(Tool(
-            pygame.image.load("Assets/sprites/screw_driver_icon.png").convert_alpha(),
-            "screw_driver", Interactable((0, 0), (18, 18))
-        ))
+        tool_bar.tools = [
+            Tool(
+                pygame.image.load("Assets/sprites/filler_image.png").convert_alpha(),
+                "grab", Interactable((0, 0), (16, 16))
+            ),
+            Tool(
+                pygame.image.load("Assets/sprites/screw_driver_icon.png").convert_alpha(),
+                "screw_driver", Interactable((0, 0), (18, 18))
+            )
+        ]
         
         self.screws: list[bool] = [
             [[20, 15], False],
