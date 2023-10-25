@@ -39,6 +39,8 @@ class ToolBar:
         
         self._press_timer = 0
         
+        self.current_tool: Tool = Tool(pygame.Surface((0, 0)), None, Interactable((0, 0), (0, 0)))
+        
     def update(self, dt: float, mouse_pos: tuple, interaction_starter: bool) -> None:
         self.interaction.update(mouse_pos, interaction_starter)
         
@@ -62,6 +64,13 @@ class ToolBar:
                     
         
         self._current_sprite = self._sprites.get(self._state)
+        
+        for tool in self.tools:
+            tool.interaction.update(mouse_pos, interaction_starter)
+            if tool.interaction.is_clicked and tool != self.current_tool:                 
+                self.current_tool = tool
+            
+                 
     
     def draw(self, dt: float, display: pygame.Surface) -> None:
         display.blit(self._current_sprite, self.pos)
@@ -70,9 +79,23 @@ class ToolBar:
                 display.blit(tool.sprite, (display.get_width()-50-i*20, self.pos.y))
                 tool.interaction.rect.x = display.get_width()-50-i*20
                 tool.interaction.rect.y = self.pos.y
+                tool.interaction.rect.w = tool.sprite.get_width()
+                tool.interaction.rect.h = tool.sprite.get_height()
+                if tool == self.current_tool:
+                    pygame.draw.circle(
+                        display, (255, 255, 255),
+                        (
+                            self.current_tool.interaction.rect.x+self.current_tool.sprite.get_width()/2,
+                            self.current_tool.interaction.rect.y+self.current_tool.sprite.get_height()/2    
+                        ),
+                        14, 1
+                    )
+                
+                    
         else:
             for i, tool in enumerate(self.tools):
+                tool.interaction.rect.w = 0
+                tool.interaction.rect.h = 0
                 tool.interaction.rect.x = self.pos.x
                 tool.interaction.rect.y = self.pos.y
-    
-    
+                
