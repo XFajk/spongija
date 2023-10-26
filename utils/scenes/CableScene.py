@@ -3,8 +3,8 @@ import pygame
 from utils import Interactable
 from utils import ToolBar, Tool
 
+from dataclasses import dataclass
 from icecream import ic
-
 
 class CableScene:
     def __init__(self, tool_bar: ToolBar, display: pygame.Surface):
@@ -16,6 +16,10 @@ class CableScene:
             Tool(
                 pygame.image.load("Assets/sprites/screw_driver_icon.png").convert_alpha(),
                 "screw_driver", Interactable((0, 0), (18, 18))
+            ),
+            Tool(
+                pygame.image.load("Assets/sprites/cable_icon.png").convert_alpha(),
+                "cable", Interactable((0, 0), (18, 18))
             )
         ]
 
@@ -31,9 +35,14 @@ class CableScene:
             (15, 10),
             (display.get_width() - 15 * 2, display.get_height() - 20 * 2)
         )
+        
         self.electrical_box: pygame.Surface = pygame.image.load("Assets/sprites/electrical_box.png").convert_alpha()
-        ic(self.upper_plate.rect)
+        
+        # the difference between the mouse position and the plates rect position
         self.mouse_plate_delta: tuple = (0, 0)
+        
+        self.cable_connector: pygame.Surface = pygame.image.load("Assets/sprites/cable_connector.png").convert_alpha()
+        
 
     def play(self, dt: float, tool_bar: ToolBar, display: pygame.Surface, mouse_pos: tuple,
              interaction_starter: bool) -> None:
@@ -44,6 +53,7 @@ class CableScene:
 
         # electrical box drawing
         display.blit(self.electrical_box, (15, 10))
+        display.blit(self.cable_connector, (25, 30))
 
         # upper plate logic and drawing
         if not len(self.screws) and self.upper_plate.is_held and tool_bar.current_tool.name == "grab":
