@@ -35,6 +35,7 @@ class Interactable:
         else:
             self.is_hovering_over = False
             self.is_clicked = False
+            self._was_clicked = False
             self.is_held = False
             self.is_released = True
 
