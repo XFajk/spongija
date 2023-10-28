@@ -1,9 +1,9 @@
 import pygame
 
 import random as rnd
+from collections import Counter
 
-from utils import Interactable
-from utils import ToolBar, Tool
+from utils import ToolBar, Tool, Interactable, delete_duplicate
 
 from icecream import ic
 
@@ -90,7 +90,8 @@ class CableScene:
         if self.selected_cables[0] is not None and self.selected_cables[1] is not None:
             if self.left_cables[self.selected_cables[0]][2] == self.right_cables[self.selected_cables[1]][2]:
                 self.cable_connections.append(tuple(self.selected_cables))
-                self.cable_connections = ic(list(set(self.cable_connections)))
+                self.cable_connections
+                self.cable_connections = delete_duplicate(self.cable_connections)
                 self.selected_cables = [None, None]
 
         # drawing the cable connections
