@@ -129,7 +129,7 @@ class CableScene:
             screw[0].update(mouse_pos, interaction_starter)
             if tool_bar.current_tool.name == "screw_driver" and screw[0].is_held:
                 screw[2] += 5 * dt
-                if screw[2] > 36:
+                if screw[2] > 360:
                     self.screws.pop(i)
             rotated_screw = pygame.transform.rotate(self.screw_image, screw[2])
             display.blit(
