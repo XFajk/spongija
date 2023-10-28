@@ -44,6 +44,7 @@ class CableScene:
         self.mouse_plate_delta: tuple = (0, 0)
 
         self.cable_connector: pygame.Surface = pygame.image.load("Assets/sprites/cable_connector.png").convert_alpha()
+        self.cable_connector_shadow: pygame.Surface = pygame.image.load("Assets/sprites/cable_connector_shadow.png").convert_alpha()
 
         self.cable_colors: list[tuple[int, int, int]] = [(255, 0, 0), (0, 255, 0), (255, 255, 0), (0, 150, 255)]
 
@@ -53,7 +54,7 @@ class CableScene:
         self.randomize_cables()
         self.apply_colors_to_cables()
 
-        self.cable_connections: list = list()
+        self.cable_connections: list[tuple] = list()
         self.selected_cables: list = [None, None]
 
     def play(self, dt: float, tool_bar: ToolBar, display: pygame.Surface, mouse_pos: tuple,
@@ -66,26 +67,52 @@ class CableScene:
         # electrical box drawing
         display.blit(self.electrical_box, (15, 10))
 
+        # drawing all the cable connectors
         for i, (left, right) in enumerate(zip(self.left_cables, self.right_cables)):
             left[1].update(mouse_pos, interaction_starter)
             right[1].update(mouse_pos, interaction_starter)
 
             if left[1].is_clicked and not self.upper_plate.is_held and tool_bar.current_tool.name == "cable":
                 self.selected_cables[0] = i
-                ic()
             if right[1].is_clicked and not self.upper_plate.is_held and tool_bar.current_tool.name == "cable":
                 self.selected_cables[1] = i
-                ic()
+
+            display.blit(self.cable_connector_shadow, (left[1].rect.x, left[1].rect.y+1))
+            display.blit(
+                pygame.transform.flip(self.cable_connector_shadow, True, False),
+                (right[1].rect.x, right[1].rect.y+1)
+            )
 
             display.blit(left[0], (left[1].rect.x, left[1].rect.y))
             display.blit(right[0], (right[1].rect.x, right[1].rect.y))
 
+        # creating the cable connections
         if self.selected_cables[0] is not None and self.selected_cables[1] is not None:
             if self.left_cables[self.selected_cables[0]][2] == self.right_cables[self.selected_cables[1]][2]:
-                self.cable_connections.append(self.selected_cables)
-                ic(self.cable_connections)
+                self.cable_connections.append(tuple(self.selected_cables))
+                self.cable_connections = ic(list(set(self.cable_connections)))
                 self.selected_cables = [None, None]
 
+        # drawing the cable connections
+        for cable_connection in self.cable_connections:
+            pygame.draw.line(
+                display, (0, 0, 0),
+                (self.left_cables[cable_connection[0]][1].rect.x+9, self.left_cables[cable_connection[0]][1].rect.y+4),
+                (self.right_cables[cable_connection[1]][1].rect.x+3, self.right_cables[cable_connection[1]][1].rect.y+4),
+                8
+            )
+
+            pygame.draw.line(
+                display, self.left_cables[cable_connection[0]][2],
+                (self.left_cables[cable_connection[0]][1].rect.x+9, self.left_cables[cable_connection[0]][1].rect.y+3),
+                (self.right_cables[cable_connection[1]][1].rect.x+3, self.right_cables[cable_connection[1]][1].rect.y+3),
+                8
+            )
+            pygame.draw.line(
+                display, pygame.Color(self.left_cables[cable_connection[0]][2])-pygame.Color(50, 50, 50, 0),
+                (self.left_cables[cable_connection[0]][1].rect.x+9, self.left_cables[cable_connection[0]][1].rect.y+7),
+                (self.right_cables[cable_connection[1]][1].rect.x+3, self.right_cables[cable_connection[1]][1].rect.y+7),
+            )
 
         # upper plate logic and drawing
         if not len(self.screws) and self.upper_plate.is_held and tool_bar.current_tool.name == "grab":
@@ -102,7 +129,7 @@ class CableScene:
             screw[0].update(mouse_pos, interaction_starter)
             if tool_bar.current_tool.name == "screw_driver" and screw[0].is_held:
                 screw[2] += 5 * dt
-                if screw[2] > 360:
+                if screw[2] > 36:
                     self.screws.pop(i)
             rotated_screw = pygame.transform.rotate(self.screw_image, screw[2])
             display.blit(

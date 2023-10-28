@@ -34,6 +34,9 @@ class Interactable:
                 self.is_held = False
         else:
             self.is_hovering_over = False
+            self.is_clicked = False
+            self.is_held = False
+            self.is_released = True
 
     def debug_draw(self, display: pygame.Surface, debug_color: tuple) -> None:
         pygame.draw.rect(display, debug_color, self.rect, 1)
