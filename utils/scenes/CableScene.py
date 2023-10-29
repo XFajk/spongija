@@ -62,9 +62,8 @@ class CableScene:
             "Assets/sprites/cable_connector_shadow.png").convert_alpha()
 
         self.sparks_effect_timer = time.perf_counter()
-        self.sparks_effect = []
-        self.spark_x_spawn_positions = [162, 37]
-        self.spark_y_spawn_positions = [(30 + i * 20)+4 for i in range(4)]
+        self.sparks_effect = list()
+        self.spark_spawn_positions = list()
 
         self.cable_colors: list[tuple[int, int, int]] = [(255, 0, 0), (0, 255, 0), (255, 255, 0), (0, 150, 255)]
 
@@ -176,10 +175,10 @@ class CableScene:
                 )
 
         for i, s in sorted(enumerate(self.sparks_effect), reverse=True):
-            s[0][0] += s[1][0]*dt
-            s[0][1] += s[1][1]*dt
-            s[1][1] += 0.1*dt
-            s[2] -= 0.05*dt
+            s[0][0] += s[1][0] * dt
+            s[0][1] += s[1][1] * dt
+            s[1][1] += 0.1 * dt
+            s[2] -= 0.05 * dt
             pygame.draw.circle(display, (255, 255, 0), s[0], s[2])
             if s[2] <= 0:
                 self.sparks_effect.pop(i)
@@ -195,12 +194,30 @@ class CableScene:
                 self.selected_cables[1] = i
 
             if time.perf_counter() - self.sparks_effect_timer > 2 and self.rounds_played < 3:
+                # timing the spawning of the sparks
                 if not self.upper_plate.rect.colliderect(left.inter.rect) and not self.upper_plate.rect.colliderect(right.inter.rect):
-                    spark_pos = [rnd.choice(self.spark_x_spawn_positions), rnd.choice(self.spark_y_spawn_positions)]
+                    indexes = [i for i in range(4)]
+                    left_indexes = [left for left, right in self.cable_connections]
+                    right_indexes = [right for left, right in self.cable_connections]
+                    missing_indexes = []
+
+                    for index in indexes:
+                        if index not in left_indexes:
+                            missing_indexes.append((index, True))
+
+                        if index not in right_indexes:
+                            missing_indexes.append((index, False))
+
+                    # spawning the sparks
+                    self.spark_spawn_positions = [
+                        (37 if side else 162, (30 + index * 20) + 4) for index, side in missing_indexes
+                    ]
+                    spark_pos: tuple = rnd.choice(self.spark_spawn_positions)
+
                     for j in range(10):
                         spark_angle = math.radians(rnd.randint(-90, 90) if spark_pos[0] == 37 else rnd.randint(90, 270))
                         self.sparks_effect.append([
-                            spark_pos.copy(),
+                            list(spark_pos),
                             [
                                 math.cos(spark_angle) * rnd.randint(50, 100) / 100,
                                 -math.sin(spark_angle) * rnd.randint(50, 100) / 100
@@ -260,6 +277,19 @@ class CableScene:
             self.upper_plate.rect.x = mouse_pos[0] - self.mouse_plate_delta[0]
             self.upper_plate.rect.y = mouse_pos[1] - self.mouse_plate_delta[1]
 
+        # drawing the selection of what cable connectors to connect
+        if self.selected_cables[0] is not None:
+            pygame.draw.circle(display, (255, 255, 255), (
+                self.left_cables[self.selected_cables[0]].inter.rect.x + 6,
+                self.left_cables[self.selected_cables[0]].inter.rect.y + 4
+            ), 7, 1)
+
+        if self.selected_cables[1] is not None:
+            pygame.draw.circle(display, (255, 255, 255), (
+                self.right_cables[self.selected_cables[1]].inter.rect.x + 6,
+                self.right_cables[self.selected_cables[1]].inter.rect.y + 4
+            ), 7, 1)
+
         pygame.draw.rect(display, (80, 80, 90), self.upper_plate.rect)
 
         # screws logic and drawing
@@ -279,8 +309,8 @@ class CableScene:
             display.blit(
                 shadow,
                 (
-                    screw.inter.rect.x - rotated_screw.get_width() / 2 + self.screw_image.get_width() / 2+1,
-                    screw.inter.rect.y - rotated_screw.get_height() / 2 + self.screw_image.get_height() / 2+1
+                    screw.inter.rect.x - rotated_screw.get_width() / 2 + self.screw_image.get_width() / 2 + 1,
+                    screw.inter.rect.y - rotated_screw.get_height() / 2 + self.screw_image.get_height() / 2 + 1
                 )
             )
 
