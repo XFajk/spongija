@@ -4,8 +4,9 @@ from utils import Interactable
 from utils import ToolBar, Tool
 from dataclasses import dataclass
 
+
 class FuelScene:
-    def __init__(self, tool_bar: ToolBar, display: pygame.Surface):
+    def __init__(self, tool_bar: ToolBar):
         tool_bar.tools = [
             Tool(
                 pygame.image.load("Assets/sprites/filler_image.png").convert_alpha(),
@@ -16,7 +17,7 @@ class FuelScene:
                 "screw_driver", Interactable((0, 0), (18, 18))
             )
         ]
-        
+
         self.screws: list[list[Interactable, bool, float]] = [
             [Interactable((189, 78), (2, 2)), False, 0.0],
             [Interactable((189, 95), (2, 2)), False, 0.0],
@@ -29,20 +30,29 @@ class FuelScene:
         self.switch: Interactable = Interactable((82, 78), (11, 6))
 
         self.images: list[pygame.Surface] = [
-            pygame.transform.scale(pygame.image.load("Assets/backgrounds/fuel_scene/image_1.png").convert_alpha(), (200, 150)),
-            pygame.transform.scale(pygame.image.load("Assets/backgrounds/fuel_scene/image_2.png").convert_alpha(), (200, 150)),
-            pygame.transform.scale(pygame.image.load("Assets/backgrounds/fuel_scene/image_3.png").convert_alpha(), (200, 150))
+            pygame.transform.scale(pygame.image.load("Assets/backgrounds/fuel_scene/image_1.png").convert_alpha(),
+                                   (200, 150)),
+            pygame.transform.scale(pygame.image.load("Assets/backgrounds/fuel_scene/image_2.png").convert_alpha(),
+                                   (200, 150)),
+            pygame.transform.scale(pygame.image.load("Assets/backgrounds/fuel_scene/image_3.png").convert_alpha(),
+                                   (200, 150))
         ]
 
         self.animation_frames: list[pygame.Surface] = [
-            pygame.transform.scale(pygame.image.load("Assets/backgrounds/fuel_scene/animation/frame_0.png").convert_alpha(), (200, 150)),
-            pygame.transform.scale(pygame.image.load("Assets/backgrounds/fuel_scene/animation/frame_1.png").convert_alpha(), (200, 150)),
-            pygame.transform.scale(pygame.image.load("Assets/backgrounds/fuel_scene/animation/frame_2.png").convert_alpha(), (200, 150)),
-            pygame.transform.scale(pygame.image.load("Assets/backgrounds/fuel_scene/animation/frame_3.png").convert_alpha(), (200, 150)),
-            pygame.transform.scale(pygame.image.load("Assets/backgrounds/fuel_scene/animation/frame_4.png").convert_alpha(), (200, 150))
+            pygame.transform.scale(
+                pygame.image.load("Assets/backgrounds/fuel_scene/animation/frame_0.png").convert_alpha(), (200, 150)),
+            pygame.transform.scale(
+                pygame.image.load("Assets/backgrounds/fuel_scene/animation/frame_1.png").convert_alpha(), (200, 150)),
+            pygame.transform.scale(
+                pygame.image.load("Assets/backgrounds/fuel_scene/animation/frame_2.png").convert_alpha(), (200, 150)),
+            pygame.transform.scale(
+                pygame.image.load("Assets/backgrounds/fuel_scene/animation/frame_3.png").convert_alpha(), (200, 150)),
+            pygame.transform.scale(
+                pygame.image.load("Assets/backgrounds/fuel_scene/animation/frame_4.png").convert_alpha(), (200, 150))
         ]
-        
-        self.panel_image = pygame.transform.scale(pygame.image.load("Assets/sprites/fuel_panel.png").convert_alpha(), (25, 25))
+
+        self.panel_image = pygame.transform.scale(pygame.image.load("Assets/sprites/fuel_panel.png").convert_alpha(),
+                                                  (25, 25))
 
         self.panel_state = True
         self.pannel_x = 169
@@ -55,14 +65,16 @@ class FuelScene:
         self.pumping_state = -4
         self.timer = None
         self.reps = 0
-          
+
+        self.millis = 0
+
     def draw(self, dt: float, display: pygame.Surface) -> None:
         display.fill((37, 36, 70))
 
         if self.pumping:
             if self.pumping_state < 22:
-                pygame.draw.rect(display, (217, 195, 0), (161, 100-self.pumping_state, 6, 20))
-                self.pumping_state += dt*0.021
+                pygame.draw.rect(display, (217, 195, 0), (161, 100 - self.pumping_state, 6, 20))
+                self.pumping_state += dt * 0.021
             else:
                 pygame.draw.rect(display, (217, 195, 0), (161, 78, 6, 20))
 
@@ -74,10 +86,10 @@ class FuelScene:
         if self.pumping and self.pumping_frame is not None:
             display.blit(self.animation_frames[self.pumping_frame], (0, 0))
 
-        if self.pumping and self.pumping_frame == None and self.timer == None:
+        if self.pumping and self.pumping_frame is None and self.timer is None:
             self.timer = self.millis
-        
-        if self.pumping and self.pumping_frame == None and self.millis - self.timer > 800:
+
+        if self.pumping and self.pumping_frame is None and self.millis - self.timer > 800:
             self.pumping_frame = 0
             display.blit(self.animation_frames[self.pumping_frame], (0, 0))
             self.timer = self.millis
@@ -111,14 +123,15 @@ class FuelScene:
         if self.reps >= 11:
             self.pumping = False
             display.blit(self.images[1], (0, 0))
-        
-        if self.panel_state == True:
+
+        if self.panel_state:
             display.blit(self.panel_image, (self.pannel_x, self.pannel_y))
 
         for screw in self.screws:
             display.blit(self.screw_image, screw[0])
-    
-    def play(self, dt: float, tool_bar: ToolBar, display: pygame.Surface, mouse_pos: tuple, interaction_starter: bool) -> None:
+
+    def play(self, dt: float, tool_bar: ToolBar, display: pygame.Surface, mouse_pos: tuple,
+             interaction_starter: bool) -> None:
         self.draw(dt, display)
 
         for i, screw in enumerate(self.screws):
@@ -135,21 +148,21 @@ class FuelScene:
                     screw[0].rect.y - rotated_screw.get_height() / 2 + self.screw_image.get_height() / 2
                 )
             )
-        
+
         if not len(self.screws) and self.panel_state:
-            self.pannel_x += 0.7*dt
+            self.pannel_x += 0.7 * dt
             display.blit(self.panel_image, (self.pannel_x, self.pannel_y))
             self.panel_state = False if self.pannel_x > 201 else True
 
         if self.hose.is_clicked and not self.panel_state and tool_bar.current_tool.name == "grab":
             self.frame = 1
-        
+
         if self.switch.is_clicked and not self.panel_state and tool_bar.current_tool.name == "grab" and self.frame == 1:
             self.frame = 2
 
         if self.frame == 2 and not self.pumping:
             self.pumping = True
-        
+
         if self.frame == 0:
             self.hose.update(mouse_pos, interaction_starter)
 

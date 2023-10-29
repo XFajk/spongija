@@ -6,6 +6,7 @@ import time
 import utils
 
 
+# noinspection PyTypeChecker
 def main():
     pygame.init()
 
@@ -19,7 +20,7 @@ def main():
 
     tool_bar = utils.ToolBar((display.get_width() - 28, display.get_height() - 28))
 
-    scenes = [utils.scenes.CableScene(tool_bar, display), ]
+    scenes = [utils.scenes.CableScene(tool_bar, display), utils.scenes.FuelScene(tool_bar)]
 
     last_frame_time = time.perf_counter()
 

@@ -2,7 +2,8 @@ import pygame
 from icecream import ic
 
 import random as rnd
-from collections import Counter
+import time
+import math
 from dataclasses import dataclass
 
 from utils import ToolBar, Tool, Interactable, delete_duplicate
@@ -57,7 +58,13 @@ class CableScene:
         self.mouse_plate_delta: tuple = (0, 0)
 
         self.cable_connector: pygame.Surface = pygame.image.load("Assets/sprites/cable_connector.png").convert_alpha()
-        self.cable_connector_shadow: pygame.Surface = pygame.image.load("Assets/sprites/cable_connector_shadow.png").convert_alpha()
+        self.cable_connector_shadow: pygame.Surface = pygame.image.load(
+            "Assets/sprites/cable_connector_shadow.png").convert_alpha()
+
+        self.sparks_effect_timer = time.perf_counter()
+        self.sparks_effect = []
+        self.spark_x_spawn_positions = [162, 37]
+        self.spark_y_spawn_positions = [(30 + i * 20)+4 for i in range(4)]
 
         self.cable_colors: list[tuple[int, int, int]] = [(255, 0, 0), (0, 255, 0), (255, 255, 0), (0, 150, 255)]
 
@@ -67,13 +74,61 @@ class CableScene:
         self.randomize_cables()
         self.apply_colors_to_cables()
 
+        # these variables are for knowing what cable_connectors to connect
         self.cable_connections: list[tuple] = list()
         self.selected_cables: list = [None, None]
 
-        self.saved_cable_connections: list = []
+        self.saved_cable_connections: list[tuple[list[CableConnector], list[CableConnector], list[tuple]]] = list()
+        self.are_cable_connections_saved: bool = False
+
+        self.init_played: bool = False
+
+        self.rounds_played: int = 0
+
+    @staticmethod
+    def init(tool_bar: ToolBar):
+        tool_bar.tools = [
+            Tool(
+                pygame.image.load("Assets/sprites/filler_image.png").convert_alpha(),
+                "grab", Interactable((0, 0), (16, 16))
+            ),
+            Tool(
+                pygame.image.load("Assets/sprites/screw_driver_icon.png").convert_alpha(),
+                "screw_driver", Interactable((0, 0), (18, 18))
+            ),
+            Tool(
+                pygame.image.load("Assets/sprites/cable_icon.png").convert_alpha(),
+                "cable", Interactable((0, 0), (18, 18))
+            )
+        ]
 
     def play(self, dt: float, tool_bar: ToolBar, display: pygame.Surface, mouse_pos: tuple,
              interaction_starter: bool) -> None:
+
+        if not self.init_played:
+            self.init(tool_bar)
+            self.init_played = True
+
+        # makes sure a cable inst selected after the old ones where saved
+        if interaction_starter and self.are_cable_connections_saved:
+            self.selected_cables = [None, None]
+        else:
+            self.are_cable_connections_saved = False
+
+        if len(self.cable_connections) == 4 and self.rounds_played < 3:
+            for left, right in zip(self.left_cables, self.right_cables):
+                left.color = pygame.Color(left.color) - pygame.Color(125, 125, 150, 0)
+                right.color = pygame.Color(right.color) - pygame.Color(125, 125, 150, 0)
+
+            self.saved_cable_connections.append((
+                self.left_cables.copy(), self.right_cables.copy(), self.cable_connections.copy()
+            ))
+            self.randomize_cables()
+            self.apply_colors_to_cables()
+            self.selected_cables = [None, None]
+            self.cable_connections = list()
+            self.are_cable_connections_saved = True
+            self.rounds_played += 1
 
         self.upper_plate.update(mouse_pos, interaction_starter)
 
@@ -81,6 +136,53 @@ class CableScene:
 
         # electrical box drawing
         display.blit(self.electrical_box, (15, 10))
+
+        # drawing of the saved cable connections
+        for scc in self.saved_cable_connections:
+            for left, right in zip(scc[0], scc[1]):
+                display.blit(self.cable_connector_shadow, (left.inter.rect.x, left.inter.rect.y + 1))
+                display.blit(
+                    pygame.transform.flip(self.cable_connector_shadow, True, False),
+                    (right.inter.rect.x, right.inter.rect.y + 1)
+                )
+
+                display.blit(left.spr, (left.inter.rect.x, left.inter.rect.y))
+                display.blit(right.spr, (right.inter.rect.x, right.inter.rect.y))
+
+            for connection in scc[2]:
+                pygame.draw.line(
+                    display, (0, 0, 0),
+                    (scc[0][connection[0]].inter.rect.x + 9,
+                     scc[0][connection[0]].inter.rect.y + 4),
+                    (scc[1][connection[1]].inter.rect.x + 3,
+                     scc[0][connection[1]].inter.rect.y + 4),
+                    8
+                )
+
+                pygame.draw.line(
+                    display, scc[0][connection[0]].color,
+                    (scc[0][connection[0]].inter.rect.x + 9,
+                     scc[0][connection[0]].inter.rect.y + 3),
+                    (scc[1][connection[1]].inter.rect.x + 3,
+                     scc[1][connection[1]].inter.rect.y + 3),
+                    8
+                )
+                pygame.draw.line(
+                    display, pygame.Color(scc[0][connection[0]].color) - pygame.Color(50, 50, 50, 0),
+                    (scc[0][connection[0]].inter.rect.x + 9,
+                     scc[0][connection[0]].inter.rect.y + 7),
+                    (scc[1][connection[1]].inter.rect.x + 3,
+                     scc[1][connection[1]].inter.rect.y + 7),
+                )
+
+        for i, s in sorted(enumerate(self.sparks_effect), reverse=True):
+            s[0][0] += s[1][0]*dt
+            s[0][1] += s[1][1]*dt
+            s[1][1] += 0.1*dt
+            s[2] -= 0.05*dt
+            pygame.draw.circle(display, (255, 255, 0), s[0], s[2])
+            if s[2] <= 0:
+                self.sparks_effect.pop(i)
 
         # drawing all the cable connectors
         for i, (left, right) in enumerate(zip(self.left_cables, self.right_cables)):
@@ -92,10 +194,25 @@ class CableScene:
             if right.inter.is_clicked and not self.upper_plate.is_held and tool_bar.current_tool.name == "cable":
                 self.selected_cables[1] = i
 
-            display.blit(self.cable_connector_shadow, (left.inter.rect.x, left.inter.rect.y+1))
+            if time.perf_counter() - self.sparks_effect_timer > 2 and self.rounds_played < 3:
+                if not self.upper_plate.rect.colliderect(left.inter.rect) and not self.upper_plate.rect.colliderect(right.inter.rect):
+                    spark_pos = [rnd.choice(self.spark_x_spawn_positions), rnd.choice(self.spark_y_spawn_positions)]
+                    for j in range(10):
+                        spark_angle = math.radians(rnd.randint(-90, 90) if spark_pos[0] == 37 else rnd.randint(90, 270))
+                        self.sparks_effect.append([
+                            spark_pos.copy(),
+                            [
+                                math.cos(spark_angle) * rnd.randint(50, 100) / 100,
+                                -math.sin(spark_angle) * rnd.randint(50, 100) / 100
+                            ],
+                            rnd.randint(2, 4)
+                        ])
+                self.sparks_effect_timer = time.perf_counter()
+
+            display.blit(self.cable_connector_shadow, (left.inter.rect.x, left.inter.rect.y + 1))
             display.blit(
                 pygame.transform.flip(self.cable_connector_shadow, True, False),
-                (right.inter.rect.x, right.inter.rect.y+1)
+                (right.inter.rect.x, right.inter.rect.y + 1)
             )
 
             display.blit(left.spr, (left.inter.rect.x, left.inter.rect.y))
@@ -112,21 +229,27 @@ class CableScene:
         for cable_connection in self.cable_connections:
             pygame.draw.line(
                 display, (0, 0, 0),
-                (self.left_cables[cable_connection[0]].inter.rect.x+9, self.left_cables[cable_connection[0]].inter.rect.y+4),
-                (self.right_cables[cable_connection[1]].inter.rect.x+3, self.right_cables[cable_connection[1]].inter.rect.y+4),
+                (self.left_cables[cable_connection[0]].inter.rect.x + 9,
+                 self.left_cables[cable_connection[0]].inter.rect.y + 4),
+                (self.right_cables[cable_connection[1]].inter.rect.x + 3,
+                 self.right_cables[cable_connection[1]].inter.rect.y + 4),
                 8
             )
 
             pygame.draw.line(
                 display, self.left_cables[cable_connection[0]].color,
-                (self.left_cables[cable_connection[0]].inter.rect.x+9, self.left_cables[cable_connection[0]].inter.rect.y+3),
-                (self.right_cables[cable_connection[1]].inter.rect.x+3, self.right_cables[cable_connection[1]].inter.rect.y+3),
+                (self.left_cables[cable_connection[0]].inter.rect.x + 9,
+                 self.left_cables[cable_connection[0]].inter.rect.y + 3),
+                (self.right_cables[cable_connection[1]].inter.rect.x + 3,
+                 self.right_cables[cable_connection[1]].inter.rect.y + 3),
                 8
             )
             pygame.draw.line(
-                display, pygame.Color(self.left_cables[cable_connection[0]].color)-pygame.Color(50, 50, 50, 0),
-                (self.left_cables[cable_connection[0]].inter.rect.x+9, self.left_cables[cable_connection[0]].inter.rect.y+7),
-                (self.right_cables[cable_connection[1]].inter.rect.x+3, self.right_cables[cable_connection[1]].inter.rect.y+7),
+                display, pygame.Color(self.left_cables[cable_connection[0]].color) - pygame.Color(50, 50, 50, 0),
+                (self.left_cables[cable_connection[0]].inter.rect.x + 9,
+                 self.left_cables[cable_connection[0]].inter.rect.y + 7),
+                (self.right_cables[cable_connection[1]].inter.rect.x + 3,
+                 self.right_cables[cable_connection[1]].inter.rect.y + 7),
             )
 
         # upper plate logic and drawing
@@ -147,6 +270,20 @@ class CableScene:
                 if screw.rotation_angle > 360:
                     self.screws.pop(i)
             rotated_screw = pygame.transform.rotate(self.screw_image, screw.rotation_angle)
+
+            shadow = pygame.Surface((8, 8))
+            shadow.set_colorkey((0, 0, 0))
+            shadow.fill((0, 0, 1))
+            shadow = pygame.transform.rotate(shadow, screw.rotation_angle)
+
+            display.blit(
+                shadow,
+                (
+                    screw.inter.rect.x - rotated_screw.get_width() / 2 + self.screw_image.get_width() / 2+1,
+                    screw.inter.rect.y - rotated_screw.get_height() / 2 + self.screw_image.get_height() / 2+1
+                )
+            )
+
             display.blit(
                 rotated_screw,
                 (
@@ -160,7 +297,7 @@ class CableScene:
         self.left_cables: list[CableConnector] = list()
 
         for i in range(4):
-            choice = rnd.randint(0, len(chosable_colors)-1)
+            choice = rnd.randint(0, len(chosable_colors) - 1)
             self.left_cables.append(CableConnector(
                 pygame.Surface((0, 0)),
                 Interactable((0, 0), (0, 0)),
@@ -172,11 +309,11 @@ class CableScene:
         self.right_cables: list[CableConnector] = list()
 
         for i in range(4):
-            choice = rnd.randint(0, len(chosable_colors)-1)
+            choice = rnd.randint(0, len(chosable_colors) - 1)
             self.right_cables.append(CableConnector(
-                    pygame.Surface((0, 0)),
-                    Interactable((0, 0), (0, 0)),
-                    chosable_colors[choice]
+                pygame.Surface((0, 0)),
+                Interactable((0, 0), (0, 0)),
+                chosable_colors[choice]
             ))
             chosable_colors.pop(choice)
 
@@ -190,7 +327,7 @@ class CableScene:
                             spr_copy.set_at((x, y), cable_connector.color)
                         case (12, 230, 242, 255):
                             spr_copy.set_at(
-                                (x, y), pygame.Color(cable_connector.color)-pygame.Color(50, 50, 50, 0)
+                                (x, y), pygame.Color(cable_connector.color) - pygame.Color(50, 50, 50, 0)
                             )
 
             self.left_cables[i] = CableConnector(
@@ -206,7 +343,7 @@ class CableScene:
                             spr_copy.set_at((x, y), cable_connector.color)
                         case (12, 230, 242, 255):
                             spr_copy.set_at(
-                                (x, y), pygame.Color(cable_connector.color)-pygame.Color(50, 50, 50, 0)
+                                (x, y), pygame.Color(cable_connector.color) - pygame.Color(50, 50, 50, 0)
                             )
             self.right_cables[i] = CableConnector(
                 spr_copy, Interactable((162, 30 + i * 20), (12, 8)), cable_connector.color
