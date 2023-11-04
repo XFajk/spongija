@@ -55,7 +55,7 @@ def main():
 
         pygame.display.set_caption(f"<game name> FPS: {round(clock.get_fps(), 2)}")
 
-        clock.tick(120)
+        clock.tick(1000)
 
     pygame.quit()
 
