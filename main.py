@@ -6,24 +6,29 @@ import time
 import utils
 
 
+# noinspection PyTypeChecker
 def main():
     pygame.init()
 
     WS = [800, 600]
     ZOOM = 4
 
-    window = pygame.display.set_mode(WS)
+    window = pygame.display.set_mode(WS, vsync=1)
     display = pygame.Surface((WS[0] / ZOOM, WS[1] / ZOOM))
 
     clock = pygame.time.Clock()
 
     tool_bar = utils.ToolBar((display.get_width() - 28, display.get_height() - 28))
 
+<<<<<<< HEAD
     scenes = [
         utils.scenes.CableScene(tool_bar, display), 
         utils.scenes.FuelScene(tool_bar, display),
         utils.scenes.WeldingScene(tool_bar, display)
         ]
+=======
+    scenes = [utils.scenes.CableScene(tool_bar, display), utils.scenes.FuelScene(tool_bar), utils.scenes.ConveyorBeltScene(display)]
+>>>>>>> 9c229178c183321e1994a1efba9fca0639bf1a88
 
     last_frame_time = time.perf_counter()
 
@@ -58,7 +63,7 @@ def main():
 
         pygame.display.set_caption(f"<game name> FPS: {round(clock.get_fps(), 2)}")
 
-        clock.tick(120)
+        clock.tick(1000)
 
     pygame.quit()
 
