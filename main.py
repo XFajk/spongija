@@ -24,6 +24,8 @@ def main():
 
     last_frame_time = time.perf_counter()
 
+    current_scene = 3
+
     done = False
     while not done:
 
@@ -43,12 +45,12 @@ def main():
 
         display.fill((90, 90, 90))
 
-        current_scene = 0
+        current_scene = scenes[current_scene].current_scene_num[0] if not current_scene else current_scene
 
         # draw here
         scenes[current_scene].play(dt, tool_bar, display, mouse_pos, mouse_input[0])
 
-        if current_scene != 0 :
+        if current_scene != 0:
             tool_bar.update(dt, mouse_pos, mouse_input[0])
             tool_bar.draw(dt, display)
 

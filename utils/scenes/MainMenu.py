@@ -1,18 +1,28 @@
 import pygame
 
 from utils import Interactable
-from utils import ToolBar, Tool
+from utils import ToolBar
 from dataclasses import dataclass
 import random as rnd
 
+
 class MainMenu:
     def __init__(self, display: pygame.Surface):
+        self.ticks = None
+        self.x_2 = None
+        self.y_1 = None
+        self.x_1 = None
+        self.y_0 = None
+        self.x_0 = None
+        self.y_2 = None
+
         self.background_image = pygame.image.load("Assets/backgrounds/main_menu/background.png").convert_alpha()
         self.rocket_image = pygame.image.load("Assets/backgrounds/main_menu/rocket.png").convert_alpha()
         self.start_button_image = pygame.image.load("Assets/backgrounds/main_menu/start_button.png").convert_alpha()
-        self.start_button_over_image = pygame.image.load("Assets/backgrounds/main_menu/start_button_over.png").convert_alpha()
+        self.start_button_over_image = pygame.image.load(
+            "Assets/backgrounds/main_menu/start_button_over.png").convert_alpha()
         self.title_image = pygame.image.load("Assets/backgrounds/main_menu/title.png").convert_alpha()
-        
+
         self.cloud_0_image = pygame.image.load("Assets/sprites/cloud_0.png").convert_alpha()
         self.cloud_1_image = pygame.image.load("Assets/sprites/cloud_1.png").convert_alpha()
         self.cloud_2_image = pygame.image.load("Assets/sprites/cloud_2.png").convert_alpha()
@@ -29,11 +39,13 @@ class MainMenu:
         self.timer_1_goal = rnd.randint(500, 1800)
         self.timer_2_goal = rnd.randint(500, 1800)
 
-        self.start_button: Interactable = Interactable((18, 65), (103, 30)) 
-          
+        self.start_button: Interactable = Interactable((18, 65), (103, 30))
+
+        self.current_scene_num: list[int] = [0]
+
     def draw(self, dt: float, display: pygame.Surface) -> None:
         display.blit(self.background_image, (0, 0))
-        
+
         display.blit(self.cloud_0_image, self.cloud_0_pos)
         display.blit(self.cloud_1_image, self.cloud_1_pos)
         display.blit(self.cloud_2_image, self.cloud_2_pos)
@@ -41,7 +53,8 @@ class MainMenu:
         display.blit(self.rocket_image, (0, 0))
         display.blit(self.title_image, (0, 0))
 
-    def play(self, dt: float, tool_bar: ToolBar, display: pygame.Surface, mouse_pos: tuple, interaction_starter: bool) -> None:
+    def play(self, dt: float, tool_bar: ToolBar, display: pygame.Surface, mouse_pos: tuple,
+             interaction_starter: bool) -> None:
         self.draw(dt, display)
 
         self.start_button.update(mouse_pos, interaction_starter)
@@ -52,7 +65,7 @@ class MainMenu:
             display.blit(self.start_button_image, (0, 0))
 
         if self.start_button.is_clicked:
-            pass #Start pressed
+            self.current_scene_num[0] += 1
 
         self.ticks = pygame.time.get_ticks()
 

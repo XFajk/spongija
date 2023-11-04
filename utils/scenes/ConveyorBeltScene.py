@@ -9,8 +9,8 @@ from utils import ToolBar, Interactable, Tool, collision_test
 
 
 class Package:
-    def __init__(self, type: str, spr: pygame.Surface, rect: pygame.Rect):
-        self.type = type
+    def __init__(self, pckg_type: str, spr: pygame.Surface, rect: pygame.Rect):
+        self.type = pckg_type
         self.spr = spr
         self.pos: Vector2 = Vector2(rect.x, rect.y)
         self.rect = rect
@@ -31,14 +31,16 @@ class Package:
         }
 
         self.pos.x += self.velocity[0] * dt
-        self.rect.x = self.pos.x - 1
-        self.rect.width += 2
+        self.rect.x = self.pos.x
         hit_list: list[pygame.Rect] = collision_test(self.rect, box_rects) + (
             [conveyor_belt_rect, ] if self.rect.colliderect(conveyor_belt_rect) else [])
-        self.rect.x = self.pos.x
-        self.rect.width -= 2
+
+        self.rect.x = self.pos.x - 1
+        self.rect.width += 2
         if self.rect.colliderect(conveyor_belt_rect):
             collision_types["conveyor_belt"] = True
+        self.rect.x = self.pos.x
+        self.rect.width -= 2
 
         for collider in hit_list:
             if self.rect.colliderect(conveyor_belt_rect):
@@ -55,14 +57,17 @@ class Package:
                 self.pos.x = self.rect.x
 
         self.pos.y += self.velocity[1] * dt
-        self.rect.y = self.pos.y - 1
-        self.rect.height += 2
+        self.rect.y = self.pos.y
         hit_list = collision_test(self.rect, box_rects) + (
             [conveyor_belt_rect, ] if self.rect.colliderect(conveyor_belt_rect) else [])
+
+        self.rect.y = self.pos.y - 1
+        self.rect.height += 2
         if self.rect.colliderect(conveyor_belt_rect):
             collision_types["conveyor_belt"] = True
         self.rect.y = self.pos.y
         self.rect.height -= 2
+
         for collider in hit_list:
             if self.velocity[1] > 0:
                 collision_types["bottom"] = True
