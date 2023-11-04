@@ -5,7 +5,7 @@ from icecream import ic
 import time
 import random as rnd
 
-from utils import ToolBar, Interactable, collision_test
+from utils import ToolBar, Interactable, Tool, collision_test
 
 
 class Package:
@@ -85,15 +85,27 @@ class ConveyorBeltScene:
 
         self.conveyor_belt_rect = pygame.Rect(120, 90, 80, 20)
 
-        self.boxes: dict = {
+        self.boxes: dict[str: pygame.Rect] = {
             "disposal": pygame.Rect(10, 125, 110, 25),
             "food": pygame.Rect(10, 40, 40, 16),
             "plants": pygame.Rect(60, 40, 40, 16),
             "extra_parts": pygame.Rect(110, 40, 40, 16),
             "wall1": pygame.Rect(-1, 0, 1, display.get_height()),
-            "wall2": pygame.Rect(display.get_width()+1, 0, 1, display.get_height()),
+            "wall2": pygame.Rect(display.get_width() + 1, 0, 1, display.get_height()),
             "wall3": pygame.Rect(0, -1, display.get_width(), 1),
             "wall4": pygame.Rect(0, display.get_height(), display.get_width(), 1)
+        }
+
+        self.sorts: dict[str: pygame.Rect] = {
+            "food": pygame.Rect(10, 20, 40, 36),
+            "plants": pygame.Rect(60, 20, 40, 36),
+            "parts": pygame.Rect(110, 20, 40, 36)
+        }
+
+        self.final_destinations: dict[str: list] = {
+            "food": list(),
+            "plants": list(),
+            "parts": list()
         }
 
         self.types_of_packages: list[Package] = [
@@ -111,7 +123,12 @@ class ConveyorBeltScene:
         self.gravity_limit: float = 5
 
     def init(self, tool_bar: ToolBar):
-        tool_bar.tools = []
+        tool_bar.tools = [
+            Tool(
+                pygame.image.load("Assets/sprites/filler_image.png").convert_alpha(),
+                "grab", Interactable((0, 0), (16, 16))
+            ),
+        ]
         self.package_add_timer = time.perf_counter()
 
     def play(self, dt: float, tool_bar: ToolBar, display: pygame.Surface, mouse_pos: tuple,
@@ -136,7 +153,7 @@ class ConveyorBeltScene:
             pckg.velocity.y += self.gravity * dt
             pckg.velocity.y = self.gravity_limit if pckg.velocity.y > self.gravity_limit else pckg.velocity.y
 
-            if pckg.inter.is_held and self.package_held is None or self.package_held == i:
+            if tool_bar.current_tool.name == "grab" and pckg.inter.is_held and self.package_held is None or self.package_held == i:
                 pckg.velocity = Vector2(
                     mouse_pos[0] - (pckg.pos.x + pckg.rect.width / 2),
                     mouse_pos[1] - (pckg.pos.y + pckg.rect.height / 2)
@@ -153,6 +170,13 @@ class ConveyorBeltScene:
                 pckg.velocity.x = -1
             else:
                 pckg.velocity.x += (0 - pckg.velocity.x) / rnd.randint(10, 100) * dt
+
+            for key, rect in self.sorts.items():
+                if pckg.rect.colliderect(rect):
+                    if pckg.type == key:
+                        self.final_destinations[key].append(0)
+                        self.packages.pop(i)
+                        self.package_held = None
 
             pygame.draw.rect(display, (255, 0, 255), pckg.rect)
 
