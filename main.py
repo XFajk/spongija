@@ -19,7 +19,11 @@ def main():
 
     tool_bar = utils.ToolBar((display.get_width() - 28, display.get_height() - 28))
 
-    scenes = [utils.scenes.CableScene(tool_bar, display), ]
+    scenes = [
+        utils.scenes.CableScene(tool_bar, display), 
+        utils.scenes.FuelScene(tool_bar, display),
+        utils.scenes.WeldingScene(tool_bar, display)
+        ]
 
     last_frame_time = time.perf_counter()
 
@@ -43,7 +47,7 @@ def main():
         display.fill((90, 90, 90))
 
         # draw here
-        scenes[0].play(dt, tool_bar, display, mouse_pos, mouse_input[0])
+        scenes[2].play(dt, tool_bar, display, mouse_pos, mouse_input[0])
 
         tool_bar.update(dt, mouse_pos, mouse_input[0])
         tool_bar.draw(dt, display)
