@@ -7,16 +7,7 @@ from dataclasses import dataclass
 
 class FuelScene:
     def __init__(self, tool_bar: ToolBar):
-        tool_bar.tools = [
-            Tool(
-                pygame.image.load("Assets/sprites/filler_image.png").convert_alpha(),
-                "grab", Interactable((0, 0), (16, 16))
-            ),
-            Tool(
-                pygame.image.load("Assets/sprites/screw_driver_icon.png").convert_alpha(),
-                "screw_driver", Interactable((0, 0), (18, 18))
-            )
-        ]
+        self.init_was_played = False
 
         self.screws: list[list[Interactable, bool, float]] = [
             [Interactable((189, 78), (2, 2)), False, 0.0],
@@ -67,6 +58,19 @@ class FuelScene:
         self.reps = 0
 
         self.millis = 0
+
+    @staticmethod
+    def init(tool_bar: ToolBar):
+        tool_bar.tools = [
+            Tool(
+                pygame.image.load("Assets/sprites/filler_image.png").convert_alpha(),
+                "grab", Interactable((0, 0), (16, 16))
+            ),
+            Tool(
+                pygame.image.load("Assets/sprites/screw_driver_icon.png").convert_alpha(),
+                "screw_driver", Interactable((0, 0), (18, 18))
+            )
+        ]
 
     def draw(self, dt: float, display: pygame.Surface) -> None:
         display.fill((37, 36, 70))
@@ -132,6 +136,10 @@ class FuelScene:
 
     def play(self, dt: float, tool_bar: ToolBar, display: pygame.Surface, mouse_pos: tuple,
              interaction_starter: bool) -> None:
+        if not self.init_was_played:
+            self.init(tool_bar)
+            self.init_was_played = True
+
         self.draw(dt, display)
 
         for i, screw in enumerate(self.screws):

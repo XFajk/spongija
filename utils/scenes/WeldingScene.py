@@ -5,18 +5,13 @@ from utils import ToolBar, Tool
 from dataclasses import dataclass
 import random as rnd
 
+
 class WeldingScene:
     def __init__(self, tool_bar: ToolBar, display: pygame.Surface):
-        tool_bar.tools = [
-            Tool(
-                pygame.image.load("Assets/sprites/filler_image.png").convert_alpha(),
-                "grab", Interactable((0, 0), (16, 16))
-            ),
-            Tool(
-                pygame.image.load("Assets/sprites/welder_icon.png").convert_alpha(),
-                "welder", Interactable((0, 0), (18, 18))
-            )
-        ]
+        self.init_was_played = False
+
+        self.completed = None
+        self.ticks = None
 
         self.panel_types: list[pygame.Surface] = [
             pygame.image.load("Assets/sprites/rocket_panels/rocket_panel_0.png").convert_alpha(),
@@ -26,7 +21,7 @@ class WeldingScene:
             pygame.image.load("Assets/sprites/rocket_panels/rocket_panel_4.png").convert_alpha(),
             pygame.image.load("Assets/sprites/rocket_panels/rocket_panel_5.png").convert_alpha()
         ]
-        
+
         self.panels: list[pygame.Surface] = []
 
         self.horizontal_welds: list[pygame.Surface] = [
@@ -63,7 +58,7 @@ class WeldingScene:
 
         self.horizontal_weld_size = (67, 10)
         self.vertical_weld_size = (10, 50)
-        
+
         self.horizontal_weld_interactables: list[Interactable] = [
             Interactable(self.horizontal_weld_locations[0], self.horizontal_weld_size),
             Interactable(self.horizontal_weld_locations[1], self.horizontal_weld_size),
@@ -84,18 +79,31 @@ class WeldingScene:
 
         self.horizontal_weld_progress = []
         self.vertical_weld_progress = []
-        
+
         self.randomize_panels()
         self.times_played = 0
         self.timer = 0
         self.timer_running = False
-          
+
+    @staticmethod
+    def init(tool_bar: ToolBar):
+        tool_bar.tools = [
+            Tool(
+                pygame.image.load("Assets/sprites/filler_image.png").convert_alpha(),
+                "grab", Interactable((0, 0), (16, 16))
+            ),
+            Tool(
+                pygame.image.load("Assets/sprites/welder_icon.png").convert_alpha(),
+                "welder", Interactable((0, 0), (18, 18))
+            )
+        ]
+
     def draw(self, dt: float, display: pygame.Surface) -> None:
         display.fill((15, 15, 20))
         for i in range(3):
             for j in range(3):
-                display.blit(self.panels[i*3+j], (j*67, i*50))
-        
+                display.blit(self.panels[i * 3 + j], (j * 67, i * 50))
+
         for i, prog in enumerate(self.horizontal_weld_progress):
             if prog > 5:
                 display.blit(self.horizontal_welds[0], self.horizontal_weld_locations[i])
@@ -106,7 +114,6 @@ class WeldingScene:
             if prog > 99:
                 display.blit(self.horizontal_welds[3], self.horizontal_weld_locations[i])
 
-        
         for i, prog in enumerate(self.vertical_weld_progress):
             if prog > 5:
                 display.blit(self.vertical_welds[0], self.vertical_weld_locations[i])
@@ -117,9 +124,15 @@ class WeldingScene:
             if prog > 99:
                 display.blit(self.vertical_welds[3], self.vertical_weld_locations[i])
 
-    def play(self, dt: float, tool_bar: ToolBar, display: pygame.Surface, mouse_pos: tuple, interaction_starter: bool) -> None:
+    def play(self, dt: float, tool_bar: ToolBar, display: pygame.Surface, mouse_pos: tuple,
+             interaction_starter: bool) -> None:
+
+        if not self.init_was_played:
+            self.init(tool_bar)
+            self.init_was_played = True
+
         self.draw(dt, display)
-        
+
         self.ticks = pygame.time.get_ticks()
         self.completed = True
 
@@ -137,7 +150,7 @@ class WeldingScene:
                 self.timer = self.ticks
                 self.timer_running = True
             else:
-                pass #Level completed
+                pass  # Level completed
 
         if self.ticks - self.timer > 1000 and self.timer_running:
             self.randomize_panels()

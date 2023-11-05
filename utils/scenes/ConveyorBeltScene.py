@@ -91,10 +91,22 @@ class ConveyorBeltScene:
         self.conveyor_belt_rect = pygame.Rect(120, 90, 80, 20)
 
         self.boxes: dict[str: pygame.Rect] = {
-            "disposal": pygame.Rect(10, 125, 110, 25),
-            "food": pygame.Rect(10, 40, 40, 16),
-            "plants": pygame.Rect(60, 40, 40, 16),
-            "extra_parts": pygame.Rect(110, 40, 40, 16),
+            "disposal": pygame.Rect(10, 148, 110, 2),
+            "disposal1": pygame.Rect(10, 125, 2, 25),
+            "disposal2": pygame.Rect(118, 125, 2, 25),
+
+            "food": pygame.Rect(10, 54, 40, 2),
+            "food1": pygame.Rect(10, 40, 2, 16),
+            "food2": pygame.Rect(48, 40, 2, 16),
+
+            "plants": pygame.Rect(60, 54, 40, 2),
+            "plants1": pygame.Rect(60, 40, 2, 16),
+            "plants2": pygame.Rect(98, 40, 2, 16),
+
+            "extra_parts": pygame.Rect(110, 54, 40, 2),
+            "extra_parts1": pygame.Rect(110, 40, 2, 16),
+            "extra_parts2": pygame.Rect(148, 40, 2, 16),
+
             "wall1": pygame.Rect(-1, 0, 1, display.get_height()),
             "wall2": pygame.Rect(display.get_width() + 1, 0, 1, display.get_height()),
             "wall3": pygame.Rect(0, -1, display.get_width(), 1),
@@ -107,6 +119,13 @@ class ConveyorBeltScene:
             "parts": pygame.Rect(110, 20, 40, 36)
         }
 
+        self.plates: dict[str: pygame.Surface] = {
+            "food": pygame.image.load("Assets/sprites/food_plate.png").convert_alpha(),
+            "plants": pygame.image.load("Assets/sprites/plant_plate.png").convert_alpha(),
+            "parts": pygame.image.load("Assets/sprites/parts_plate.png").convert_alpha()
+        }
+        self.crate = pygame.image.load("Assets/sprites/crate.png").convert_alpha()
+
         self.final_destinations: dict[str: list] = {
             "food": list(),
             "plants": list(),
@@ -114,9 +133,9 @@ class ConveyorBeltScene:
         }
 
         self.types_of_packages: list[Package] = [
-            Package("food", pygame.Surface((16, 16)), pygame.Rect(0, 0, 12, 16)),
-            Package("plants", pygame.Surface((16, 16)), pygame.Rect(0, 0, 12, 16)),
-            Package("parts", pygame.Surface((16, 16)), pygame.Rect(0, 0, 12, 16)),
+            Package("food", pygame.image.load("Assets/sprites/packs/food.png").convert_alpha(), pygame.Rect(0, 0, 12, 16)),
+            Package("plants", pygame.image.load("Assets/sprites/packs/plants.png").convert_alpha(), pygame.Rect(0, 0, 12, 16)),
+            Package("parts", pygame.image.load("Assets/sprites/packs/parts.png").convert_alpha(), pygame.Rect(0, 0, 12, 16)),
         ]
         self.packages: list[Package] = []
         self.package_add_timer = 0
@@ -183,7 +202,13 @@ class ConveyorBeltScene:
                         self.packages.pop(i)
                         self.package_held = None
 
-            pygame.draw.rect(display, (255, 0, 255), pckg.rect)
+            display.blit(pckg.spr, pckg.pos)
 
         for box in self.boxes.values():
             pygame.draw.rect(display, (0, 255, 0), box)
+
+        for key, crate in self.sorts.items():
+            display.blit(self.crate, (crate.x, crate.y+11))
+            display.blit(self.plates[key], (crate.x+12, crate.y+19))
+
+

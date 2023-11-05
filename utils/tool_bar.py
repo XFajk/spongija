@@ -36,7 +36,7 @@ class ToolBar:
         self._state: str = "retracted"
 
         # here to record if the tool_bar icon was clicked
-        self.interaction: Interactable = Interactable(self.pos, (16, 16))
+        self.interaction: Interactable = Interactable(tuple(self.pos), (16, 16))
 
         self._press_timer = 0
 
