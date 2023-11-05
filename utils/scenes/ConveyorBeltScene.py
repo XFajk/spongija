@@ -18,6 +18,10 @@ class Package:
         self.velocity: Vector2 = pygame.Vector2(0, 0)
         self.inter: Interactable = Interactable(tuple(self.pos), (rect.width, rect.height))
 
+        self.fall_sound: pygame.mixer.Sound = pygame.mixer.Sound("Assets/sound_effects/falling_bag.wav")
+        self.fall_played: bool = False
+        self.bottom: bool = False
+
     def copy(self):
         new_instance = self.__class__(self.type, self.spr.copy(), self.rect.copy())
         return new_instance
@@ -35,18 +39,13 @@ class Package:
         self.rect.x = self.pos.x
         hit_list: list[pygame.Rect] = collision_test(self.rect, box_rects) + (
             [conveyor_belt_rect, ] if self.rect.colliderect(conveyor_belt_rect) else [])
-
         self.rect.x = self.pos.x - 1
         self.rect.width += 2
         if self.rect.colliderect(conveyor_belt_rect):
             collision_types["conveyor_belt"] = True
         self.rect.x = self.pos.x
         self.rect.width -= 2
-
         for collider in hit_list:
-            if self.rect.colliderect(conveyor_belt_rect):
-                collision_types["conveyor_belt"] = True
-
             if self.velocity[0] > 0:
                 collision_types["right"] = True
                 self.rect.right = collider.left
@@ -64,14 +63,20 @@ class Package:
 
         self.rect.y = self.pos.y - 1
         self.rect.height += 2
+        sound_hit_list = collision_test(self.rect, box_rects) + (
+            [conveyor_belt_rect, ] if self.rect.colliderect(conveyor_belt_rect) else [])
         if self.rect.colliderect(conveyor_belt_rect):
             collision_types["conveyor_belt"] = True
         self.rect.y = self.pos.y
         self.rect.height -= 2
 
+        if not len(sound_hit_list):
+            self.bottom = False
+
         for collider in hit_list:
             if self.velocity[1] > 0:
                 collision_types["bottom"] = True
+                self.bottom = True
                 self.rect.bottom = collider.top
                 self.pos.y = self.rect.y
             elif self.velocity[1] < 0:
@@ -105,19 +110,19 @@ class ConveyorBeltScene:
         self.conveyor_belt_animation_timer = time.perf_counter()
 
         self.boxes: dict[str: pygame.Rect] = {
-            "disposal": pygame.Rect(10, 148, 110, 2),
+            "disposal": pygame.Rect(10, 140, 110, 2),
             "disposal1": pygame.Rect(10, 129, 2, 25),
             "disposal2": pygame.Rect(118, 129, 2, 25),
 
-            "food": pygame.Rect(10, 54, 40, 2),
+            "food": pygame.Rect(10, 46, 40, 2),
             "food1": pygame.Rect(10, 40, 2, 16),
             "food2": pygame.Rect(48, 40, 2, 16),
 
-            "plants": pygame.Rect(60, 54, 40, 2),
+            "plants": pygame.Rect(60, 46, 40, 2),
             "plants1": pygame.Rect(60, 40, 2, 16),
             "plants2": pygame.Rect(98, 40, 2, 16),
 
-            "extra_parts": pygame.Rect(110, 54, 40, 2),
+            "extra_parts": pygame.Rect(110, 46, 40, 2),
             "extra_parts1": pygame.Rect(110, 40, 2, 16),
             "extra_parts2": pygame.Rect(148, 40, 2, 16),
 
@@ -125,7 +130,7 @@ class ConveyorBeltScene:
             "wall2": pygame.Rect(display.get_width() + 20, 0, 1, display.get_height()),
             "wall3": pygame.Rect(0, -1, display.get_width(), 1),
             "wall4": pygame.Rect(0, display.get_height(), display.get_width(), 1),
-
+            "wall5": pygame.Rect(10, 56, 150, 2)
         }
 
         self.sorts: dict[str: pygame.Rect] = {
@@ -224,7 +229,15 @@ class ConveyorBeltScene:
                 self.package_held = None
 
             collision_types: dict[str: bool] = pckg.move(dt, list(self.boxes.values()), self.conveyor_belt_rect)
-            pckg.velocity.y = 0 if collision_types["bottom"] else pckg.velocity.y
+            if collision_types["bottom"]:
+                pckg.velocity.y = 0
+
+            if not pckg.fall_played and pckg.bottom:
+                pckg.fall_sound.play(0)
+                pckg.fall_played = True
+            elif not pckg.bottom:
+                pckg.fall_played = False
+
             pckg.velocity.y = 1 if collision_types["top"] else pckg.velocity.y
             if collision_types["conveyor_belt"]:
                 pckg.velocity.x = -1
