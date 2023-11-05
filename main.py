@@ -58,7 +58,7 @@ def main():
         window.blit(surf, [0, 0])
         pygame.display.update()
 
-        pygame.display.set_caption(f"<game name> FPS: {round(clock.get_fps(), 2)}")
+        pygame.display.set_caption(f"Departure FPS: {round(clock.get_fps(), 2)}")
 
         clock.tick(1000)
 
