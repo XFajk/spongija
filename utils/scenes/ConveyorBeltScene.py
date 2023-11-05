@@ -63,10 +63,15 @@ class Package:
 
         self.rect.y = self.pos.y - 1
         self.rect.height += 2
+        sound_hit_list = collision_test(self.rect, box_rects) + (
+            [conveyor_belt_rect, ] if self.rect.colliderect(conveyor_belt_rect) else [])
         if self.rect.colliderect(conveyor_belt_rect):
             collision_types["conveyor_belt"] = True
         self.rect.y = self.pos.y
         self.rect.height -= 2
+
+        if not len(sound_hit_list):
+            self.bottom = False
 
         for collider in hit_list:
             if self.velocity[1] > 0:
@@ -230,6 +235,8 @@ class ConveyorBeltScene:
             if not pckg.fall_played and pckg.bottom:
                 pckg.fall_sound.play(0)
                 pckg.fall_played = True
+            elif not pckg.bottom:
+                pckg.fall_played = False
 
             pckg.velocity.y = 1 if collision_types["top"] else pckg.velocity.y
             if collision_types["conveyor_belt"]:
