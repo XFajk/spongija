@@ -24,7 +24,7 @@ def main():
 
     last_frame_time = time.perf_counter()
 
-    current_scene = 2
+    current_scene = 3
 
     done = False
     while not done:
@@ -42,8 +42,6 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 done = True
-
-        display.fill((90, 90, 90))
 
         current_scene = scenes[current_scene].current_scene_num[0] if not current_scene else current_scene
 

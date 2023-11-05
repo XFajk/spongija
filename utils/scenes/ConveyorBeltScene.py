@@ -86,14 +86,21 @@ class Package:
 class ConveyorBeltScene:
     def __init__(self, display: pygame.Surface):
         self.init_was_ran: bool = False
-        self.frame_counter = 0
+        self.won: bool = False
 
-        self.conveyor_belt_rect = pygame.Rect(120, 90, 80, 20)
+        self.background: pygame.Surface = pygame.image.load("Assets/backgrounds/conveyor_belt/background.png")
+
+        self.conveyor_belt_rect = pygame.Rect(120, 90, 100, 20)
+        self.conveyer_belt_animation_frames: list[pygame.Surface] = [
+            pygame.image.load(f"Assets/sprites/conveyor_belt_{i + 1}.png").convert_alpha() for i in range(3)
+        ]
+        self.conveyer_belt_animation_index: int = 0
+        self.conveyor_belt_animation_timer = time.perf_counter()
 
         self.boxes: dict[str: pygame.Rect] = {
             "disposal": pygame.Rect(10, 148, 110, 2),
-            "disposal1": pygame.Rect(10, 125, 2, 25),
-            "disposal2": pygame.Rect(118, 125, 2, 25),
+            "disposal1": pygame.Rect(10, 129, 2, 25),
+            "disposal2": pygame.Rect(118, 129, 2, 25),
 
             "food": pygame.Rect(10, 54, 40, 2),
             "food1": pygame.Rect(10, 40, 2, 16),
@@ -108,9 +115,10 @@ class ConveyorBeltScene:
             "extra_parts2": pygame.Rect(148, 40, 2, 16),
 
             "wall1": pygame.Rect(-1, 0, 1, display.get_height()),
-            "wall2": pygame.Rect(display.get_width() + 1, 0, 1, display.get_height()),
+            "wall2": pygame.Rect(display.get_width() + 20, 0, 1, display.get_height()),
             "wall3": pygame.Rect(0, -1, display.get_width(), 1),
-            "wall4": pygame.Rect(0, display.get_height(), display.get_width(), 1)
+            "wall4": pygame.Rect(0, display.get_height(), display.get_width(), 1),
+
         }
 
         self.sorts: dict[str: pygame.Rect] = {
@@ -125,17 +133,21 @@ class ConveyorBeltScene:
             "parts": pygame.image.load("Assets/sprites/parts_plate.png").convert_alpha()
         }
         self.crate = pygame.image.load("Assets/sprites/crate.png").convert_alpha()
+        self.big_crate = pygame.image.load("Assets/sprites/big_crate.png").convert_alpha()
 
-        self.final_destinations: dict[str: list] = {
-            "food": list(),
-            "plants": list(),
-            "parts": list()
+        self.final_destinations: dict[str: int] = {
+            "food": 0,
+            "plants": 0,
+            "parts": 0
         }
 
         self.types_of_packages: list[Package] = [
-            Package("food", pygame.image.load("Assets/sprites/packs/food.png").convert_alpha(), pygame.Rect(0, 0, 12, 16)),
-            Package("plants", pygame.image.load("Assets/sprites/packs/plants.png").convert_alpha(), pygame.Rect(0, 0, 12, 16)),
-            Package("parts", pygame.image.load("Assets/sprites/packs/parts.png").convert_alpha(), pygame.Rect(0, 0, 12, 16)),
+            Package("food", pygame.image.load("Assets/sprites/packs/food.png").convert_alpha(),
+                    pygame.Rect(0, 0, 12, 16)),
+            Package("plants", pygame.image.load("Assets/sprites/packs/plants.png").convert_alpha(),
+                    pygame.Rect(0, 0, 12, 16)),
+            Package("parts", pygame.image.load("Assets/sprites/packs/parts.png").convert_alpha(),
+                    pygame.Rect(0, 0, 12, 16)),
         ]
         self.packages: list[Package] = []
         self.package_add_timer = 0
@@ -157,20 +169,37 @@ class ConveyorBeltScene:
 
     def play(self, dt: float, tool_bar: ToolBar, display: pygame.Surface, mouse_pos: tuple,
              interaction_starter: bool) -> None:
+
+        display.blit(self.background, (0, 0))
+
         # this if statement makes sure that the init method is run only once
         if not self.init_was_ran:
             self.init(tool_bar)
             self.init_was_ran = True
 
-        if time.perf_counter() - self.package_add_timer > self.package_add_time:
+        if time.perf_counter() - self.package_add_timer > self.package_add_time and len(self.packages) < 10:
             pckg: Package = rnd.choice(self.types_of_packages)
-            pckg.rect.x = 180
+            pckg.rect.x = 200
             pckg.rect.y = 74
             self.packages.append(pckg.copy())
             self.package_add_timer = time.perf_counter()
 
-        pygame.draw.rect(display, (255, 0, 0), self.conveyor_belt_rect)
+        if time.perf_counter() - self.package_add_timer > 0.2:
+            self.conveyer_belt_animation_index += 1
+            if self.conveyer_belt_animation_index >= len(self.conveyer_belt_animation_frames):
+                self.conveyer_belt_animation_index = 0
 
+        pygame.draw.rect(display, (100, 100, 100), (185, 70, 40, 40))
+        pygame.draw.rect(display, (32, 21, 51), (188, 72, 40, 20))
+        display.blit(self.conveyer_belt_animation_frames[self.conveyer_belt_animation_index], (
+            self.conveyor_belt_rect.x, self.conveyor_belt_rect.y
+        ))
+
+        self.final_destinations = {
+            "food": 0,
+            "plants": 0,
+            "parts": 0
+        }
         for i, pckg in enumerate(self.packages):
             pckg.inter.update(mouse_pos, interaction_starter)
 
@@ -198,17 +227,23 @@ class ConveyorBeltScene:
             for key, rect in self.sorts.items():
                 if pckg.rect.colliderect(rect):
                     if pckg.type == key:
-                        self.final_destinations[key].append(0)
-                        self.packages.pop(i)
-                        self.package_held = None
+                        self.final_destinations[key] += 1
 
             display.blit(pckg.spr, pckg.pos)
 
-        for box in self.boxes.values():
-            pygame.draw.rect(display, (0, 255, 0), box)
+        pygame.draw.rect(display, (100, 100, 100), (195, 70, 40, 40))
+
+        display.blit(self.big_crate, (10, 125))
 
         for key, crate in self.sorts.items():
-            display.blit(self.crate, (crate.x, crate.y+11))
-            display.blit(self.plates[key], (crate.x+12, crate.y+19))
+            display.blit(self.crate, (crate.x, crate.y + 11))
+            display.blit(self.plates[key], (crate.x + 12, crate.y + 19))
 
+        # checking for winning
+        box_packages = 0
+        for i in self.final_destinations.values():
+            box_packages += i
+
+        if box_packages == 10:
+            self.won = True
 
