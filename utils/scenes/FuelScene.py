@@ -26,9 +26,18 @@ class FuelScene:
             [Interactable((172, 78), (2, 2)), False, 0.0]
         ]
         self.screw_image: pygame.Surface = pygame.image.load("Assets/sprites/small_screw.png").convert_alpha()
+        self.screw_sound: pygame.mixer.Sound = pygame.mixer.Sound("Assets/sound_effects/metal_plate.wav")
+        self.screw_sound_played: bool = False
+        self.screw_sound_timer: float = sys.maxsize
 
         self.hose: Interactable = Interactable((151, 94), (8, 8))
         self.switch: Interactable = Interactable((82, 78), (11, 6))
+
+        self.connect_sound = pygame.mixer.Sound("Assets/sound_effects/connect.wav")
+        self.connect_sound_played: bool = False
+
+        self.lever_sound = pygame.mixer.Sound("Assets/sound_effects/lever.wav")
+        self.lever_sound_played: bool = False
 
         self.images: list[pygame.Surface] = [
             pygame.transform.scale(pygame.image.load("Assets/backgrounds/fuel_scene/image_1.png").convert_alpha(),
@@ -66,6 +75,10 @@ class FuelScene:
         self.pumping_state = -4
         self.timer = None
         self.reps = 0
+
+        self.pumping_sound = pygame.mixer.Sound("Assets/sound_effects/engine_sound.wav")
+        self.pumping_sound_played: bool = False
+        self.pumping_sound_timer: float = sys.maxsize
 
         self.millis = 0
 
@@ -160,6 +173,7 @@ class FuelScene:
 
         if time.perf_counter() - self.won_timer > 2:
             self.end_won = True
+            pygame.mixer.stop()
 
     def play(self, dt: float, tool_bar: ToolBar, display: pygame.Surface, mouse_pos: tuple,
              interaction_starter: bool) -> None:
@@ -172,6 +186,10 @@ class FuelScene:
         for i, screw in enumerate(self.screws):
             screw[0].update(mouse_pos, interaction_starter)
             if tool_bar.current_tool.name == "screw_driver" and screw[0].is_held:
+                if not self.screw_sound_played:
+                    self.screw_sound.play(0)
+                    self.screw_sound_timer = time.perf_counter()
+                    self.screw_sound_played = True
                 screw[2] += 5 * dt
                 if screw[2] > 360:
                     self.screws.pop(i)
@@ -184,6 +202,9 @@ class FuelScene:
                 )
             )
 
+        if time.perf_counter() - self.screw_sound_timer > self.screw_sound.get_length():
+            self.screw_sound_played = False
+
         if not len(self.screws) and self.panel_state:
             self.pannel_x += 0.7 * dt
             display.blit(self.panel_image, (self.pannel_x, self.pannel_y))
@@ -191,9 +212,15 @@ class FuelScene:
 
         if self.hose.is_clicked and not self.panel_state and tool_bar.current_tool.name == "grab":
             self.frame = 1
+            if not self.connect_sound_played:
+                self.connect_sound.play(0)
+                self.connect_sound_played = True
 
         if self.switch.is_clicked and not self.panel_state and tool_bar.current_tool.name == "grab" and self.frame == 1:
             self.frame = 2
+            if not self.lever_sound_played:
+                self.lever_sound.play(0)
+                self.lever_sound_played = True
 
         if self.frame == 2 and not self.pumping:
             self.pumping = True
@@ -203,3 +230,11 @@ class FuelScene:
 
         if self.frame == 1:
             self.switch.update(mouse_pos, interaction_starter)
+
+        if self.pumping and not self.pumping_sound_played:
+            self.pumping_sound.play(0)
+            self.pumping_sound_played = True
+            self.pumping_sound_timer = time.perf_counter()
+
+        if time.perf_counter() - self.pumping_sound_timer > self.pumping_sound.get_length():
+            self.pumping_sound_played = False

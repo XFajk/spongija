@@ -109,6 +109,10 @@ class ConveyorBeltScene:
         self.conveyer_belt_animation_index: int = 0
         self.conveyor_belt_animation_timer = time.perf_counter()
 
+        self.engine_sound = pygame.mixer.Sound("Assets/sound_effects/engine_sound.wav")
+        self.engine_sound_played: bool = False
+        self.engine_sound_timer: float = sys.maxsize
+
         self.boxes: dict[str: pygame.Rect] = {
             "disposal": pygame.Rect(10, 140, 110, 2),
             "disposal1": pygame.Rect(10, 129, 2, 25),
@@ -127,7 +131,7 @@ class ConveyorBeltScene:
             "extra_parts2": pygame.Rect(148, 40, 2, 16),
 
             "wall1": pygame.Rect(-1, 0, 1, display.get_height()),
-            "wall2": pygame.Rect(display.get_width() + 20, 0, 1, display.get_height()),
+            "wall2": pygame.Rect(display.get_width(), 0, 1, display.get_height()),
             "wall3": pygame.Rect(0, -1, display.get_width(), 1),
             "wall4": pygame.Rect(0, display.get_height(), display.get_width(), 1),
             "wall5": pygame.Rect(10, 56, 150, 2)
@@ -191,7 +195,7 @@ class ConveyorBeltScene:
 
         if time.perf_counter() - self.package_add_timer > self.package_add_time and len(self.packages) < 10:
             pckg: Package = rnd.choice(self.types_of_packages)
-            pckg.rect.x = 200
+            pckg.rect.x = 184
             pckg.rect.y = 74
             self.packages.append(pckg.copy())
             self.package_add_timer = time.perf_counter()
@@ -259,6 +263,14 @@ class ConveyorBeltScene:
             display.blit(self.crate, (crate.x, crate.y + 11))
             display.blit(self.plates[key], (crate.x + 12, crate.y + 19))
 
+        if not self.engine_sound_played:
+            self.engine_sound.play(0)
+            self.engine_sound_played = True
+            self.engine_sound_timer = time.perf_counter()
+
+        if time.perf_counter() - self.engine_sound_timer > self.engine_sound.get_length():
+            self.engine_sound_played = False
+
         # checking for winning
         box_packages = 0
         for i in self.final_destinations.values():
@@ -282,4 +294,5 @@ class ConveyorBeltScene:
 
         if time.perf_counter() - self.won_timer > 2:
             self.end_won = True
+            pygame.mixer.stop()
 
