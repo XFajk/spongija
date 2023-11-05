@@ -1,0 +1,3 @@
+Názov tímu: FRJ
+Názov hry: Departure
+Vývojové prostredie a prostriedky: Python, Pygame, Piskel, BeepBox, Audacity, Pixelorama
