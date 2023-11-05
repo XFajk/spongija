@@ -20,7 +20,7 @@ def main():
 
     tool_bar = utils.ToolBar((display.get_width() - 28, display.get_height() - 28))
 
-    scenes = [utils.scenes.MainMenu(display), utils.scenes.CableScene(display), utils.scenes.FuelScene(display), utils.scenes.ConveyorBeltScene(display), utils.scenes.WeldingScene(tool_bar, display)]
+    scenes = [utils.scenes.MainMenu(display), utils.scenes.StartCutscene(display), utils.scenes.CableScene(display), utils.scenes.FuelScene(display), utils.scenes.ConveyorBeltScene(display), utils.scenes.WeldingScene(tool_bar, display)]
 
     last_frame_time = time.perf_counter()
 
