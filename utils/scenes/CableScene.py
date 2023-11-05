@@ -4,6 +4,7 @@ from icecream import ic
 import random as rnd
 import time
 import math
+import sys
 from dataclasses import dataclass
 
 from utils import ToolBar, Tool, Interactable, delete_duplicate
@@ -23,21 +24,13 @@ class CableConnector:
 
 
 class CableScene:
-    def __init__(self, tool_bar: ToolBar, display: pygame.Surface):
-        tool_bar.tools = [
-            Tool(
-                pygame.image.load("Assets/sprites/grab_icon.png").convert_alpha(),
-                "grab", Interactable((0, 0), (16, 16))
-            ),
-            Tool(
-                pygame.image.load("Assets/sprites/screw_driver_icon.png").convert_alpha(),
-                "screw_driver", Interactable((0, 0), (18, 18))
-            ),
-            Tool(
-                pygame.image.load("Assets/sprites/cable_icon.png").convert_alpha(),
-                "cable", Interactable((0, 0), (18, 18))
-            )
-        ]
+    def __init__(self, display: pygame.Surface):
+        self.won: bool = False
+        self.won_timer = sys.maxsize
+        self.end_won: bool = False
+        self.font: pygame.font.Font = pygame.font.Font("Assets/fonts/Pixeboy.ttf", 20)
+        self.text: pygame.Surface = self.font.render("Level Complete", False, (255, 255, 255))
+        self.text_pos: pygame.Vector2 = pygame.Vector2(display.get_width()/2-self.text.get_width()/2, -40)
 
         self.screws: list[Screw] = [
             Screw(Interactable((20, 15), (8, 8)), 0.0),
@@ -88,7 +81,7 @@ class CableScene:
     def init(tool_bar: ToolBar):
         tool_bar.tools = [
             Tool(
-                pygame.image.load("Assets/sprites/filler_image.png").convert_alpha(),
+                pygame.image.load("Assets/sprites/grab_icon.png").convert_alpha(),
                 "grab", Interactable((0, 0), (16, 16))
             ),
             Tool(
@@ -113,7 +106,6 @@ class CableScene:
             self.selected_cables = [None, None]
         else:
             self.are_cable_connections_saved = False
-
         if len(self.cable_connections) == 4 and self.rounds_played < 3:
             for left, right in zip(self.left_cables, self.right_cables):
                 left.color = pygame.Color(left.color) - pygame.Color(125, 125, 150, 0)
@@ -195,7 +187,8 @@ class CableScene:
 
             if time.perf_counter() - self.sparks_effect_timer > 2 and self.rounds_played < 3:
                 # timing the spawning of the sparks
-                if not self.upper_plate.rect.colliderect(left.inter.rect) and not self.upper_plate.rect.colliderect(right.inter.rect):
+                if not self.upper_plate.rect.colliderect(left.inter.rect) and not self.upper_plate.rect.colliderect(
+                        right.inter.rect):
                     indexes = [i for i in range(4)]
                     left_indexes = [left for left, right in self.cable_connections]
                     right_indexes = [right for left, right in self.cable_connections]
@@ -321,6 +314,26 @@ class CableScene:
                     screw.inter.rect.y - rotated_screw.get_height() / 2 + self.screw_image.get_height() / 2
                 )
             )
+
+        # checking for winning
+        if len(self.cable_connections) == 4 and self.rounds_played == 3:
+            self.won = True
+            self.rounds_played += 1
+
+        if self.won:
+            if self.text_pos.y < display.get_height()/2-20:
+                self.text_pos.y += 3 * dt
+            else:
+                self.won_timer = time.perf_counter()
+                self.won = False
+
+        display.blit(
+            self.font.render("Level Complete", False, (255, 255, 255)),
+            self.text_pos
+        )
+
+        if time.perf_counter() - self.won_timer > 2:
+            self.end_won = True
 
     def randomize_cables(self):
         chosable_colors: list[tuple[int, int, int]] = self.cable_colors.copy()

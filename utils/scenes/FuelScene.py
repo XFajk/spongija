@@ -1,13 +1,23 @@
 import pygame
+from icecream import ic
+
+import sys
+import time
 
 from utils import Interactable
 from utils import ToolBar, Tool
-from dataclasses import dataclass
 
 
 class FuelScene:
-    def __init__(self, tool_bar: ToolBar):
+    def __init__(self, display: pygame.Surface):
         self.init_was_played = False
+
+        self.won: bool = False
+        self.won_timer = sys.maxsize
+        self.end_won: bool = False
+        self.font: pygame.font.Font = pygame.font.Font("Assets/fonts/Pixeboy.ttf", 20)
+        self.text: pygame.Surface = self.font.render("Level Complete", False, (255, 255, 255))
+        self.text_pos: pygame.Vector2 = pygame.Vector2(display.get_width()/2-self.text.get_width()/2, -40)
 
         self.screws: list[list[Interactable, bool, float]] = [
             [Interactable((189, 78), (2, 2)), False, 0.0],
@@ -81,6 +91,8 @@ class FuelScene:
                 self.pumping_state += dt * 0.021
             else:
                 pygame.draw.rect(display, (217, 195, 0), (161, 78, 6, 20))
+                if self.text_pos.y < 0:
+                    self.won = True
 
         self.millis = pygame.time.get_ticks()
 
@@ -133,6 +145,21 @@ class FuelScene:
 
         for screw in self.screws:
             display.blit(self.screw_image, screw[0])
+
+        if self.won:
+            if self.text_pos.y < display.get_height()/2-20:
+                self.text_pos.y += 3 * dt
+            else:
+                self.won_timer = time.perf_counter()
+                self.won = False
+
+        display.blit(
+            self.font.render("Level Complete", False, (255, 255, 255)),
+            self.text_pos
+        )
+
+        if time.perf_counter() - self.won_timer > 2:
+            self.end_won = True
 
     def play(self, dt: float, tool_bar: ToolBar, display: pygame.Surface, mouse_pos: tuple,
              interaction_starter: bool) -> None:

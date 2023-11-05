@@ -3,6 +3,7 @@ from pygame import Vector2
 from icecream import ic
 
 import time
+import sys
 import random as rnd
 
 from utils import ToolBar, Interactable, Tool, collision_test
@@ -86,7 +87,13 @@ class Package:
 class ConveyorBeltScene:
     def __init__(self, display: pygame.Surface):
         self.init_was_ran: bool = False
+
         self.won: bool = False
+        self.won_timer = sys.maxsize
+        self.end_won: bool = False
+        self.font: pygame.font.Font = pygame.font.Font("Assets/fonts/Pixeboy.ttf", 20)
+        self.text: pygame.Surface = self.font.render("Level Complete", False, (255, 255, 255), (0, 0, 0))
+        self.text_pos: pygame.Vector2 = pygame.Vector2(display.get_width()/2-self.text.get_width()/2, -40)
 
         self.background: pygame.Surface = pygame.image.load("Assets/backgrounds/conveyor_belt/background.png")
 
@@ -161,7 +168,7 @@ class ConveyorBeltScene:
     def init(self, tool_bar: ToolBar):
         tool_bar.tools = [
             Tool(
-                pygame.image.load("Assets/sprites/filler_image.png").convert_alpha(),
+                pygame.image.load("Assets/sprites/grab_icon.png").convert_alpha(),
                 "grab", Interactable((0, 0), (16, 16))
             ),
         ]
@@ -245,5 +252,21 @@ class ConveyorBeltScene:
             box_packages += i
 
         if box_packages == 10:
-            self.won = True
+            if self.text_pos.y < 0:
+                self.won = True
+
+        if self.won:
+            if self.text_pos.y < display.get_height()/2:
+                self.text_pos.y += 3 * dt
+            else:
+                self.won_timer = time.perf_counter()
+                self.won = False
+
+        display.blit(
+            self.font.render("Level Complete", False, (255, 255, 255)),
+            self.text_pos
+        )
+
+        if time.perf_counter() - self.won_timer > 2:
+            self.end_won = True
 

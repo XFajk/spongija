@@ -4,11 +4,20 @@ from utils import Interactable
 from utils import ToolBar, Tool
 from dataclasses import dataclass
 import random as rnd
+import sys
+import time
 
 
 class WeldingScene:
     def __init__(self, tool_bar: ToolBar, display: pygame.Surface):
         self.init_was_played = False
+
+        self.won: bool = False
+        self.won_timer = sys.maxsize
+        self.end_won: bool = False
+        self.font: pygame.font.Font = pygame.font.Font("Assets/fonts/Pixeboy.ttf", 20)
+        self.text: pygame.Surface = self.font.render("Level Complete", False, (255, 255, 255))
+        self.text_pos: pygame.Vector2 = pygame.Vector2(display.get_width() / 2 - self.text.get_width() / 2, -40)
 
         self.completed = None
         self.ticks = None
@@ -89,10 +98,6 @@ class WeldingScene:
     def init(tool_bar: ToolBar):
         tool_bar.tools = [
             Tool(
-                pygame.image.load("Assets/sprites/grab_icon.png").convert_alpha(),
-                "grab", Interactable((0, 0), (16, 16))
-            ),
-            Tool(
                 pygame.image.load("Assets/sprites/welder_icon.png").convert_alpha(),
                 "welder", Interactable((0, 0), (18, 18))
             )
@@ -124,6 +129,22 @@ class WeldingScene:
             if prog > 99:
                 display.blit(self.vertical_welds[3], self.vertical_weld_locations[i])
 
+
+        if self.won:
+            if self.text_pos.y < display.get_height()/2-20:
+                self.text_pos.y += 3 * dt
+            else:
+                self.won_timer = time.perf_counter()
+                self.won = False
+
+        display.blit(
+            self.font.render("Level Complete", False, (255, 255, 255)),
+            self.text_pos
+        )
+
+        if time.perf_counter() - self.won_timer > 2:
+            self.end_won = True
+
     def play(self, dt: float, tool_bar: ToolBar, display: pygame.Surface, mouse_pos: tuple,
              interaction_starter: bool) -> None:
 
@@ -150,7 +171,8 @@ class WeldingScene:
                 self.timer = self.ticks
                 self.timer_running = True
             else:
-                pass  # Level completed
+                if self.text_pos.y < 0:
+                    self.won = True
 
         if self.ticks - self.timer > 1000 and self.timer_running:
             self.randomize_panels()

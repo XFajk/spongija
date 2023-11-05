@@ -8,6 +8,8 @@ import random as rnd
 
 class MainMenu:
     def __init__(self, display: pygame.Surface):
+        self.end_won: bool = False
+
         self.ticks = None
         self.x_2 = None
         self.y_1 = None
@@ -41,8 +43,6 @@ class MainMenu:
 
         self.start_button: Interactable = Interactable((18, 65), (103, 30))
 
-        self.current_scene_num: list[int] = [0]
-
     def draw(self, dt: float, display: pygame.Surface) -> None:
         display.blit(self.background_image, (0, 0))
 
@@ -65,7 +65,7 @@ class MainMenu:
             display.blit(self.start_button_image, (0, 0))
 
         if self.start_button.is_clicked:
-            self.current_scene_num[0] += 1
+            self.end_won = True
 
         self.ticks = pygame.time.get_ticks()
 
