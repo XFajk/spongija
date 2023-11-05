@@ -26,7 +26,7 @@ class CableScene:
     def __init__(self, tool_bar: ToolBar, display: pygame.Surface):
         tool_bar.tools = [
             Tool(
-                pygame.image.load("Assets/sprites/filler_image.png").convert_alpha(),
+                pygame.image.load("Assets/sprites/grab_icon.png").convert_alpha(),
                 "grab", Interactable((0, 0), (16, 16))
             ),
             Tool(

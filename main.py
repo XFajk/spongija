@@ -24,7 +24,7 @@ def main():
 
     last_frame_time = time.perf_counter()
 
-    current_scene = 3
+    current_scene = 4
 
     done = False
     while not done:
