@@ -9,6 +9,7 @@ import utils
 # noinspection PyTypeChecker
 def main():
     pygame.init()
+    pygame.mixer.init()
 
     WS = [800, 600]
     ZOOM = 4
@@ -24,7 +25,7 @@ def main():
 
     last_frame_time = time.perf_counter()
 
-    current_scene = 0
+    current_scene = 5
 
     done = False
     while not done:
@@ -50,7 +51,7 @@ def main():
         # draw here
         scenes[current_scene].play(dt, tool_bar, display, mouse_pos, mouse_input[0])
 
-        if current_scene:
+        if current_scene >= 2:
             tool_bar.update(dt, mouse_pos, mouse_input[0])
             tool_bar.draw(dt, display)
 
@@ -60,8 +61,9 @@ def main():
 
         pygame.display.set_caption(f"Departure FPS: {round(clock.get_fps(), 2)}")
 
-        clock.tick(1000)
+        clock.tick(60)
 
+    pygame.mixer.quit()
     pygame.quit()
 
 

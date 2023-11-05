@@ -1,8 +1,10 @@
 import pygame
 
+
+from icecream import ic
 from utils import Interactable
 from utils import ToolBar, Tool
-from dataclasses import dataclass
+from utils.utils import Spark
 import random as rnd
 import sys
 import time
@@ -94,6 +96,11 @@ class WeldingScene:
         self.timer = 0
         self.timer_running = False
 
+        self.welding: pygame.mixer.Sound = pygame.mixer.Sound("Assets/sound_effects/welding.wav")
+        self.welding_is_playing: bool = False
+
+        self.particles: list[Spark] = []
+
     @staticmethod
     def init(tool_bar: ToolBar):
         tool_bar.tools = [
@@ -129,9 +136,14 @@ class WeldingScene:
             if prog > 99:
                 display.blit(self.vertical_welds[3], self.vertical_weld_locations[i])
 
+        for i, p in sorted(enumerate(self.particles), reverse=True):
+            p.move(dt, 0.1)
+            p.draw(display)
+            if not p.alive:
+                self.particles.pop(i)
 
         if self.won:
-            if self.text_pos.y < display.get_height()/2-20:
+            if self.text_pos.y < display.get_height() / 2 - 20:
                 self.text_pos.y += 3 * dt
             else:
                 self.won_timer = time.perf_counter()
@@ -166,15 +178,16 @@ class WeldingScene:
                 self.completed = False
 
         if self.completed:
-            if self.times_played < 3:
+            if self.times_played < 3 and not self.timer_running:
                 self.times_played += 1
                 self.timer = self.ticks
                 self.timer_running = True
-            else:
+                self.completed = False
+            elif self.times_played >= 3:
                 if self.text_pos.y < 0:
                     self.won = True
 
-        if self.ticks - self.timer > 1000 and self.timer_running:
+        if self.ticks - self.timer > 1000 and self.timer_running and self.text_pos.y < 0:
             self.randomize_panels()
             self.timer_running = False
 
@@ -182,11 +195,31 @@ class WeldingScene:
             weld.update(mouse_pos, interaction_starter)
             if tool_bar.current_tool.name == "welder" and weld.is_held and self.horizontal_weld_progress[i] < 100:
                 self.horizontal_weld_progress[i] += dt * 0.8
+                self.particles.append(Spark(
+                    mouse_pos, rnd.randint(0, 360), rnd.randint(1, 4), (255, 255, 255),
+                    rnd.randint(1, 10)/10, 0.1
+                ))
+
+                if not self.welding_is_playing:
+                    self.welding_is_playing = True
+                    self.welding.play(-1)
 
         for i, weld in enumerate(self.vertical_weld_interactables):
             weld.update(mouse_pos, interaction_starter)
             if tool_bar.current_tool.name == "welder" and weld.is_held and self.vertical_weld_progress[i] < 100:
                 self.vertical_weld_progress[i] += dt * 0.8
+                self.particles.append(Spark(
+                    mouse_pos, rnd.randint(0, 360), rnd.randint(1, 4), (255, 255, 255),
+                    rnd.randint(1, 10)/10, 0.1
+                ))
+
+                if not self.welding_is_playing:
+                    self.welding_is_playing = True
+                    self.welding.play(-1)
+
+        if not interaction_starter:
+            self.welding_is_playing = False
+            self.welding.stop()
 
     def randomize_panels(self):
         self.panels.clear()
