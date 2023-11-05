@@ -70,7 +70,7 @@ class StartCutscene:
         self.text_7_begun = False
         self.text_7_complete = False
 
-        self.text_8 = "... keep this information "
+        self.text_8 = "...keep this information "
         self.text_8_char = False
         self.text_8_timer = 0
         self.text_8_begun = False
