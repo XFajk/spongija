@@ -21,11 +21,11 @@ def main():
 
     tool_bar = utils.ToolBar((display.get_width() - 28, display.get_height() - 28))
 
-    scenes = [utils.scenes.MainMenu(display), utils.scenes.StartCutscene(display), utils.scenes.CableScene(display), utils.scenes.FuelScene(display), utils.scenes.ConveyorBeltScene(display), utils.scenes.WeldingScene(tool_bar, display)]
+    scenes = [utils.scenes.MainMenu(display), utils.scenes.StartCutscene(display), utils.scenes.CableScene(display), utils.scenes.FuelScene(display), utils.scenes.ConveyorBeltScene(display), utils.scenes.WeldingScene(tool_bar, display), utils.scenes.EndCutscene(display)]
 
     last_frame_time = time.perf_counter()
 
-    current_scene = 2
+    current_scene = 6
 
     done = False
     while not done:
@@ -44,9 +44,9 @@ def main():
             if event.type == pygame.QUIT:
                 done = True
 
-        if scenes[current_scene].end_won:
-            current_scene += 1
-            scenes[current_scene].end_won = False
+        #if scenes[current_scene].end_won:
+        #    current_scene += 1
+        #    scenes[current_scene].end_won = False
 
         # draw here
         scenes[current_scene].play(dt, tool_bar, display, mouse_pos, mouse_input[0])
