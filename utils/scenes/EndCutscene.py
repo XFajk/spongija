@@ -8,6 +8,12 @@ from dataclasses import dataclass
 class EndCutscene:
     def __init__(self, display: pygame.Surface):
         
+        self.init_was_played: bool = False
+        
+        self.end_won = False
+        
+        self.select_sound = pygame.mixer.Sound("Assets/sound_effects/select.wav")
+        
         self.frames: list[pygame.Surface] = [
             pygame.transform.scale(pygame.image.load("Assets/cutscenes/rocket_done.png").convert_alpha(), (200, 150)),
             pygame.image.load("Assets/cutscenes/rocket_inside.png").convert_alpha(),
@@ -137,7 +143,13 @@ class EndCutscene:
         self.text_25_timer = 0
         self.text_25_complete = False
         self.text_25_begun = False
-
+        
+    @staticmethod
+    def init():
+        pygame.mixer.music.load("Assets/music/background-MainMenu.wav")
+        pygame.mixer.music.play(-1)
+        
+        
     def draw(self, dt: float, display: pygame.Surface) -> None:
         
         display.fill((0, 0, 0))
@@ -153,6 +165,10 @@ class EndCutscene:
 
     def play(self, dt: float, tool_bar: ToolBar, display: pygame.Surface, mouse_pos: tuple,
              interaction_starter: bool) -> None:
+        
+        if not self.init_was_played:
+            self.init()
+            self.init_was_played = True
         
         self.ticks = pygame.time.get_ticks()
         
@@ -171,6 +187,7 @@ class EndCutscene:
             if not self.choice:
                 if self.button.is_clicked:
                     self.waiting = False
+                    self.select_sound.play(0)
             else:
                 if self.ticks - self.choice_timer > 400:
                     if self.button_autopilot.is_clicked:
