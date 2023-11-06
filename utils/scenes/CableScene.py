@@ -88,6 +88,8 @@ class CableScene:
 
     @staticmethod
     def init(tool_bar: ToolBar):
+        pygame.mixer.music.load("Assets/music/background.wav")
+        pygame.mixer.music.play(-1)
         tool_bar.tools = [
             Tool(
                 pygame.image.load("Assets/sprites/grab_icon.png").convert_alpha(),
