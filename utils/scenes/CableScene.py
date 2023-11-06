@@ -39,6 +39,9 @@ class CableScene:
             Screw(Interactable((display.get_width() - 15 * 2 - 5, 15), (8, 8)), 0.0)
         ]
         self.screw_image: pygame.Surface = pygame.image.load("Assets/sprites/screw.png").convert_alpha()
+        self.screw_sound: pygame.mixer.Sound = pygame.mixer.Sound("Assets/sound_effects/metal_plate.wav")
+        self.screw_sound_played: bool = False
+        self.screw_sound_timer: float = sys.maxsize
 
         self.upper_plate: Interactable = Interactable(
             (15, 10),
@@ -58,6 +61,8 @@ class CableScene:
         self.sparks_effect = list()
         self.spark_spawn_positions = list()
 
+        self.sparks_sound = pygame.mixer.Sound("Assets/sound_effects/electrical_sparks.wav")
+
         self.cable_colors: list[tuple[int, int, int]] = [(255, 0, 0), (0, 255, 0), (255, 255, 0), (0, 150, 255)]
 
         self.left_cables: list[CableConnector] = list()
@@ -69,6 +74,9 @@ class CableScene:
         # these variables are for knowing what cable_connectors to connect
         self.cable_connections: list[tuple] = list()
         self.selected_cables: list = [None, None]
+
+        self.select_sound = pygame.mixer.Sound("Assets/sound_effects/select.wav")
+        self.connect_sound = pygame.mixer.Sound("Assets/sound_effects/connect.wav")
 
         self.saved_cable_connections: list[tuple[list[CableConnector], list[CableConnector], list[tuple]]] = list()
         self.are_cable_connections_saved: bool = False
@@ -179,13 +187,14 @@ class CableScene:
         for i, (left, right) in enumerate(zip(self.left_cables, self.right_cables)):
             left.inter.update(mouse_pos, interaction_starter)
             right.inter.update(mouse_pos, interaction_starter)
-
             if left.inter.is_clicked and not self.upper_plate.is_held and tool_bar.current_tool.name == "cable":
                 self.selected_cables[0] = i
+                self.select_sound.play(0)
             if right.inter.is_clicked and not self.upper_plate.is_held and tool_bar.current_tool.name == "cable":
                 self.selected_cables[1] = i
+                self.select_sound.play(0)
 
-            if time.perf_counter() - self.sparks_effect_timer > 2 and self.rounds_played < 3:
+            if time.perf_counter() - self.sparks_effect_timer > 2 and self.rounds_played < 4:
                 # timing the spawning of the sparks
                 if not self.upper_plate.rect.colliderect(left.inter.rect) and not self.upper_plate.rect.colliderect(
                         right.inter.rect):
@@ -206,6 +215,8 @@ class CableScene:
                         (37 if side else 162, (30 + index * 20) + 4) for index, side in missing_indexes
                     ]
                     spark_pos: tuple = rnd.choice(self.spark_spawn_positions)
+
+                    self.sparks_sound.play(0)
 
                     for j in range(10):
                         spark_angle = math.radians(rnd.randint(-90, 90) if spark_pos[0] == 37 else rnd.randint(90, 270))
@@ -230,6 +241,8 @@ class CableScene:
 
         # creating the cable connections
         if self.selected_cables[0] is not None and self.selected_cables[1] is not None:
+            self.connect_sound.play(0)
+
             if self.left_cables[self.selected_cables[0]].color == self.right_cables[self.selected_cables[1]].color:
                 self.cable_connections.append(tuple(self.selected_cables))
                 self.cable_connections = delete_duplicate(self.cable_connections)
@@ -289,6 +302,10 @@ class CableScene:
         for i, screw in enumerate(self.screws):
             screw.inter.update(mouse_pos, interaction_starter)
             if tool_bar.current_tool.name == "screw_driver" and screw.inter.is_held:
+                if not self.screw_sound_played:
+                    self.screw_sound.play(0)
+                    self.screw_sound_timer = time.perf_counter()
+                    self.screw_sound_played = True
                 screw.rotation_angle += 5 * dt
                 if screw.rotation_angle > 360:
                     self.screws.pop(i)
@@ -314,6 +331,8 @@ class CableScene:
                     screw.inter.rect.y - rotated_screw.get_height() / 2 + self.screw_image.get_height() / 2
                 )
             )
+        if time.perf_counter() - self.screw_sound_timer > self.screw_sound.get_length():
+            self.screw_sound_played = False
 
         # checking for winning
         if len(self.cable_connections) == 4 and self.rounds_played == 3:

@@ -21,6 +21,8 @@ class StartCutscene:
 
         self.dialog_box = pygame.image.load("Assets/sprites/dialog_box.png").convert_alpha()
 
+        self.select_sound = pygame.mixer.Sound("Assets/sound_effects/select.wav")
+
         self.font = pygame.font.Font("Assets/fonts/LcdSolid.ttf", 12)
 
         self.current_frame = 0
@@ -182,6 +184,7 @@ class StartCutscene:
         if self.waiting:
             if self.button.is_clicked:
                 self.waiting = False
+                self.select_sound.play(0)
 
         if self.current_frame == 0 and self.ticks - self.initial_timer > 2200 and not self.initial_timer_done and self.text == 0:
             self.text_0_char = 0

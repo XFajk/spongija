@@ -65,6 +65,7 @@ class MainMenu:
             display.blit(self.start_button_image, (0, 0))
 
         if self.start_button.is_clicked:
+            pygame.mixer.Sound("Assets/sound_effects/select.wav").play()
             self.end_won = True
 
         self.ticks = pygame.time.get_ticks()
