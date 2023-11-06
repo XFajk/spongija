@@ -133,7 +133,7 @@ class EndCutscene:
         self.text_23_complete = False
         self.text_23_begun = False
 
-        self.text_24 = "Oh no,              "
+        self.text_24 = "Oh no,                     "
         self.text_24_char = False
         self.text_24_timer = 0
         self.text_24_begun = False
