@@ -21,6 +21,12 @@ class EndCutscene:
             pygame.image.load("Assets/cutscenes/meteorite_front.png").convert_alpha()
         ]
 
+        self.meteorite: list[pygame.Surface] = [
+            pygame.image.load("Assets/cutscenes/meteorite_front_0.png").convert_alpha(),
+            pygame.image.load("Assets/cutscenes/meteorite_front_1.png").convert_alpha(),
+            pygame.image.load("Assets/cutscenes/meteorite_front.png").convert_alpha()
+        ]
+
         self.dialog_box = pygame.image.load("Assets/sprites/dialog_box.png").convert_alpha()
 
         self.font = pygame.font.Font("Assets/fonts/LcdSolid.ttf", 12)
@@ -33,6 +39,8 @@ class EndCutscene:
         self.button_manual: Interactable = Interactable((100, 0), (100, 150))
         self.waiting = False
         self.choice = False
+        self.is_meteorite = False
+        self.meteorite_stage = 0
 
         self.text = 0
 
@@ -111,6 +119,25 @@ class EndCutscene:
         self.text_21_complete = False
         self.text_21_begun = False
 
+        self.text_22_timer = 0
+        self.text_22_complete = False
+        self.text_22_begun = False
+
+        self.text_23_timer = 0
+        self.text_23_complete = False
+        self.text_23_begun = False
+
+        self.text_24 = "Oh no,              "
+        self.text_24_char = False
+        self.text_24_timer = 0
+        self.text_24_begun = False
+
+        self.text_25 = "MAYDAY! MAYDAY! MAYDAY!    "
+        self.text_25_char = False
+        self.text_25_timer = 0
+        self.text_25_complete = False
+        self.text_25_begun = False
+
     def draw(self, dt: float, display: pygame.Surface) -> None:
         
         display.fill((0, 0, 0))
@@ -118,6 +145,8 @@ class EndCutscene:
             display.blit(self.backgrounds[0], (0, 0))
         elif self.background == 2:
             display.blit(self.backgrounds[1], (0, 0))
+        if self.is_meteorite:
+            display.blit(self.meteorite[self.meteorite_stage], (0, 0))
         display.blit(self.frames[self.current_frame], (0, 0))
         if self.choice:
             display.blit(self.frames[2], (0, 0))
@@ -438,3 +467,52 @@ class EndCutscene:
             self.current_frame = 1
             self.background = 2
             self.text = 24
+
+        #text 24
+        
+        if self.text == 24 and not self.text_24_begun and not self.waiting:
+            self.current_frame = 1
+            self.background = 2
+            self.is_meteorite = True
+            self.meteorite_stage = 0
+            self.text_24_char = 0
+            self.text_24_timer = self.ticks
+            self.text_24_begun = True
+
+        if self.text_24_char >= 0 and self.ticks - self.text_24_timer > 100 and self.text_24_begun and self.text == 24:
+            self.text_24_char += 1
+            self.text_24_timer = self.ticks
+
+        if self.text_24_char >= 0 and self.text_24_begun and self.text == 24 or self.text == 25:
+            display.blit(self.dialog_box, (0, 0))
+            display.blit(pygame.font.Font.render(self.font, self.text_24[0:self.text_24_char], False, (255, 255, 255)),
+                         (3, 120))
+            if self.text_24_char == len(self.text_24):
+                self.text = 25
+        
+        #text 25
+
+        if self.text == 25 and not self.text_25_begun:
+            self.meteorite_stage = 1
+            self.text_25_char = 0
+            self.text_25_timer = self.ticks
+            self.text_25_begun = True
+
+        if self.text_25_char >= 0 and self.ticks - self.text_25_timer > 100 and self.text_25_begun and self.text == 25 and not self.waiting:
+            self.text_25_char += 1
+            self.text_25_timer = self.ticks
+
+        if self.text_25_char >= 0 and self.text_25_begun and self.text == 25:
+            display.blit(pygame.font.Font.render(self.font, self.text_25[0:self.text_25_char], False, (255, 255, 255)),
+                         (3, 137))
+            if self.text_25_char == len(self.text_25):
+                self.waiting = True
+                self.text_25_complete = True
+                self.meteorite_stage = 2
+
+        if self.text == 25 and not self.waiting and self.text_25_complete:
+            self.meteorite_stage = 2
+            self.text = 26
+
+        if self.text == 26:
+            display.blit(pygame.image.load("Assets/cutscenes/ending_2.png").convert_alpha(), (0, 0))

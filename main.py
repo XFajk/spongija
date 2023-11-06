@@ -25,7 +25,7 @@ def main():
 
     last_frame_time = time.perf_counter()
 
-    current_scene = 6
+    current_scene = 0
 
     done = False
     while not done:
@@ -44,14 +44,14 @@ def main():
             if event.type == pygame.QUIT:
                 done = True
 
-        #if scenes[current_scene].end_won:
-        #    current_scene += 1
-        #    scenes[current_scene].end_won = False
+        if scenes[current_scene].end_won:
+            current_scene += 1
+            scenes[current_scene].end_won = False
 
         # draw here
         scenes[current_scene].play(dt, tool_bar, display, mouse_pos, mouse_input[0])
 
-        if current_scene >= 2:
+        if current_scene >= 2 and current_scene <6:
             tool_bar.update(dt, mouse_pos, mouse_input[0])
             tool_bar.draw(dt, display)
 
