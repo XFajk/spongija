@@ -8,6 +8,8 @@ import random as rnd
 
 class MainMenu:
     def __init__(self, display: pygame.Surface):
+        self.init_was_played = False
+
         self.end_won: bool = False
 
         self.ticks = None
@@ -43,6 +45,11 @@ class MainMenu:
 
         self.start_button: Interactable = Interactable((18, 65), (103, 30))
 
+    @staticmethod
+    def init():
+        pygame.mixer.music.load("Assets/music/background-MainMenu.wav")
+        pygame.mixer.music.play(-1)
+
     def draw(self, dt: float, display: pygame.Surface) -> None:
         display.blit(self.background_image, (0, 0))
 
@@ -55,6 +62,10 @@ class MainMenu:
 
     def play(self, dt: float, tool_bar: ToolBar, display: pygame.Surface, mouse_pos: tuple,
              interaction_starter: bool) -> None:
+        if not self.init_was_played:
+            self.init()
+            self.init_was_played = True
+
         self.draw(dt, display)
 
         self.start_button.update(mouse_pos, interaction_starter)
