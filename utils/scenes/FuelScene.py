@@ -18,6 +18,7 @@ class FuelScene:
         self.font: pygame.font.Font = pygame.font.Font("Assets/fonts/Pixeboy.ttf", 20)
         self.text: pygame.Surface = self.font.render("Level Complete", False, (255, 255, 255))
         self.text_pos: pygame.Vector2 = pygame.Vector2(display.get_width()/2-self.text.get_width()/2, -40)
+        self.complete_sound = pygame.mixer.Sound("Assets/sound_effects/complete.wav")
 
         self.screws: list[list[Interactable, bool, float]] = [
             [Interactable((189, 78), (2, 2)), False, 0.0],
@@ -165,6 +166,7 @@ class FuelScene:
             else:
                 self.won_timer = time.perf_counter()
                 self.won = False
+                self.complete_sound.play(0)
 
         display.blit(
             self.font.render("Level Complete", False, (255, 255, 255)),
