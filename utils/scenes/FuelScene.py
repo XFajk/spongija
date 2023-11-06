@@ -1,5 +1,4 @@
 import pygame
-from icecream import ic
 
 import sys
 import time

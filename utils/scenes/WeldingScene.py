@@ -1,7 +1,5 @@
 import pygame
 
-
-from icecream import ic
 from utils import Interactable
 from utils import ToolBar, Tool
 from utils.utils import Spark

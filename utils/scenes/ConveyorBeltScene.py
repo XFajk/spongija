@@ -1,6 +1,5 @@
 import pygame
 from pygame import Vector2
-from icecream import ic
 
 import time
 import sys
