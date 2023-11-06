@@ -41,6 +41,7 @@ class ToolBar:
         self._press_timer = 0
 
         self.current_tool: Tool = Tool(pygame.Surface((0, 0)), "None", Interactable((0, 0), (0, 0)))
+        self.select_sound = pygame.mixer.Sound("Assets/sound_effects/select.wav")
 
     def update(self, dt: float, mouse_pos: tuple, interaction_starter: bool) -> None:
         self.interaction.update(mouse_pos, interaction_starter)
@@ -68,7 +69,9 @@ class ToolBar:
         for tool in self.tools:
             tool.interaction.update(mouse_pos, interaction_starter)
             if tool.interaction.is_clicked and tool != self.current_tool:
+                self.select_sound.play(0)
                 self.current_tool = tool
+
 
     def draw(self, dt: float, display: pygame.Surface) -> None:
         display.blit(self._current_sprite, self.pos)
