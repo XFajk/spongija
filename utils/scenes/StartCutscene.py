@@ -108,7 +108,7 @@ class StartCutscene:
         self.text_13_begun = False
         self.text_13_complete = False
 
-        self.text_14 = "T... T... This cant be"
+        self.text_14 = "T... T... This can't be"
         self.text_14_char = False
         self.text_14_timer = 0
         self.text_14_begun = False
